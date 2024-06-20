@@ -19,6 +19,8 @@ ark-std = { version = "0.4.0", default-features = false }
 ark-relations = { version = "0.4.0", default-features = false }
 ark-crypto-primitives = { version = "0.4.0", default-features = false, features = ["snark", "sponge"] }
 ark-r1cs-std = { version = "0.4.0", default-features = false, optional = true }
+flexible-transcript = { version = "0.3.2", default-features = false }
+thiserror = { version = "1.0", default-features = false }
 
 tracing = { version = "0.1", default-features = false, features = [ "attributes" ], optional = true }
 derivative = { version = "2.0", features = ["use_core"], optional = true}

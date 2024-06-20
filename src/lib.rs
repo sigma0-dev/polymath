@@ -15,6 +15,19 @@
 #[macro_use]
 extern crate ark_std;
 
+use std::fmt::{Debug, Display};
+
+use ark_crypto_primitives::snark::*;
+use ark_ec::pairing::Pairing;
+use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
+use ark_std::marker::PhantomData;
+use ark_std::rand::RngCore;
+use flexible_transcript::Transcript;
+
+pub use self::data_structures::*;
+pub use self::error::*;
+pub use self::verifier::*;
+
 /// Data structures used by the prover, verifier, and generator.
 pub mod data_structures;
 
@@ -29,27 +42,26 @@ pub mod verifier;
 
 #[cfg(test)]
 mod test;
+mod error;
+mod r#macro;
 
-pub use self::data_structures::*;
-pub use self::verifier::*;
-
-use ark_crypto_primitives::snark::*;
-use ark_ec::pairing::Pairing;
-use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
-use ark_std::rand::RngCore;
-use ark_std::{marker::PhantomData, vec::Vec};
-
-/// The [[Polymath]](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
-pub struct Polymath<E: Pairing> {
-    _p: PhantomData<(E)>,
+/// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
+pub struct Polymath<E: Pairing, T>
+where
+    T: Transcript<Challenge = E::ScalarField>,
+{
+    _p: PhantomData<(E, T)>,
 }
 
-impl <E: Pairing> SNARK<E::ScalarField> for Polymath<E> {
+impl<E: Pairing, T> SNARK<E::ScalarField> for Polymath<E, T>
+where
+    T: Transcript<Challenge = E::ScalarField>,
+{
     type ProvingKey = ProvingKey<E>;
     type VerifyingKey = VerifyingKey<E>;
     type Proof = Proof<E>;
     type ProcessedVerifyingKey = PreparedVerifyingKey<E>;
-    type Error = SynthesisError;
+    type Error = PolymathError;
 
     fn circuit_specific_setup<C: ConstraintSynthesizer<E::ScalarField>, R: RngCore>(
         circuit: C,
@@ -74,8 +86,7 @@ impl <E: Pairing> SNARK<E::ScalarField> for Polymath<E> {
     fn process_vk(
         circuit_vk: &Self::VerifyingKey,
     ) -> Result<Self::ProcessedVerifyingKey, Self::Error> {
-        todo!();
-        // Ok(prepare_verifying_key(circuit_vk))
+        Ok(prepare_verifying_key(circuit_vk))
     }
 
     fn verify_with_processed_vk(
@@ -87,4 +98,7 @@ impl <E: Pairing> SNARK<E::ScalarField> for Polymath<E> {
     }
 }
 
-impl<E: Pairing> CircuitSpecificSetupSNARK<E::ScalarField> for Polymath<E> {}
+impl<E: Pairing, T> CircuitSpecificSetupSNARK<E::ScalarField> for Polymath<E, T> where
+    T: Transcript<Challenge = E::ScalarField>
+{
+}
