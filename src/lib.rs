@@ -15,17 +15,19 @@
 #[macro_use]
 extern crate ark_std;
 
-use std::fmt::{Debug, Display};
+use std::fmt::{Debug};
 
 use ark_crypto_primitives::snark::*;
 use ark_ec::pairing::Pairing;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
+use ark_serialize::SerializationError;
 use ark_std::marker::PhantomData;
 use ark_std::rand::RngCore;
 use flexible_transcript::Transcript;
 
+use crate::pcs::UnivariatePCS;
+
 pub use self::data_structures::*;
-pub use self::error::*;
 pub use self::verifier::*;
 
 /// Data structures used by the prover, verifier, and generator.
@@ -40,22 +42,24 @@ pub mod prover;
 /// Verify proofs for the Polymath zkSNARK construction.
 pub mod verifier;
 
+mod r#macro;
+mod pcs;
 #[cfg(test)]
 mod test;
-mod error;
-mod r#macro;
 
 /// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
-pub struct Polymath<E: Pairing, T>
+pub struct Polymath<E: Pairing, T, PCS>
 where
     T: Transcript<Challenge = E::ScalarField>,
+    PCS: UnivariatePCS<E::ScalarField>,
 {
-    _p: PhantomData<(E, T)>,
+    _p: PhantomData<(E, T, PCS)>,
 }
 
-impl<E: Pairing, T> SNARK<E::ScalarField> for Polymath<E, T>
+impl<E: Pairing, T, PCS> SNARK<E::ScalarField> for Polymath<E, T, PCS>
 where
     T: Transcript<Challenge = E::ScalarField>,
+    PCS: UnivariatePCS<E::ScalarField>,
 {
     type ProvingKey = ProvingKey<E>;
     type VerifyingKey = VerifyingKey<E>;
@@ -98,7 +102,17 @@ where
     }
 }
 
-impl<E: Pairing, T> CircuitSpecificSetupSNARK<E::ScalarField> for Polymath<E, T> where
-    T: Transcript<Challenge = E::ScalarField>
+impl<E: Pairing, T, PCS> CircuitSpecificSetupSNARK<E::ScalarField> for Polymath<E, T, PCS>
+where
+    T: Transcript<Challenge = E::ScalarField>,
+    PCS: UnivariatePCS<E::ScalarField>,
 {
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum PolymathError {
+    #[error(transparent)]
+    SynthesisError(#[from] SynthesisError),
+    #[error(transparent)]
+    SerializationError(#[from] SerializationError),
 }

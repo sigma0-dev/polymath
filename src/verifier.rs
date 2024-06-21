@@ -1,7 +1,8 @@
-use ark_ec::{AffineRepr, pairing::Pairing};
+use ark_ec::pairing::Pairing;
 use flexible_transcript::Transcript;
 
 use crate::{Polymath, PolymathError, to_bytes};
+use crate::pcs::UnivariatePCS;
 
 use super::{PreparedVerifyingKey, Proof, VerifyingKey};
 
@@ -10,9 +11,10 @@ pub fn prepare_verifying_key<E: Pairing>(vk: &VerifyingKey<E>) -> PreparedVerify
     PreparedVerifyingKey { vk: vk.clone() }
 }
 
-impl<E: Pairing, T> Polymath<E, T>
+impl<E: Pairing, T, PCS> Polymath<E, T, PCS>
 where
     T: Transcript<Challenge = E::ScalarField>,
+    PCS: UnivariatePCS<E::ScalarField>,
 {
     /// Verify a Polymath proof `proof` against the prepared verification key `pvk`,
     /// with respect to the instance `public_inputs`.
