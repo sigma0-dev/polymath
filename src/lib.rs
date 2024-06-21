@@ -15,17 +15,15 @@
 #[macro_use]
 extern crate ark_std;
 
-use std::fmt::{Debug};
-
 use ark_crypto_primitives::snark::*;
 use ark_ec::pairing::Pairing;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
 use ark_std::marker::PhantomData;
-use ark_std::rand::RngCore;
+use ark_std::{fmt::Debug, rand::RngCore};
 use flexible_transcript::Transcript;
 
-use crate::pcs::UnivariatePCS;
+use crate::pcs::{PCSError, UnivariatePCS};
 
 pub use self::data_structures::*;
 pub use self::verifier::*;
@@ -51,7 +49,13 @@ mod test;
 pub struct Polymath<E: Pairing, T, PCS>
 where
     T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<E::ScalarField>,
+    PCS: UnivariatePCS<
+        E::ScalarField,
+        Commitment = E::G1Affine,
+        EvalProof = E::G1Affine,
+        Transcript = T,
+        SrsV = VerifyingKey<E>,
+    >,
 {
     _p: PhantomData<(E, T, PCS)>,
 }
@@ -59,12 +63,18 @@ where
 impl<E: Pairing, T, PCS> SNARK<E::ScalarField> for Polymath<E, T, PCS>
 where
     T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<E::ScalarField>,
+    PCS: UnivariatePCS<
+        E::ScalarField,
+        Commitment = E::G1Affine,
+        EvalProof = E::G1Affine,
+        Transcript = T,
+        SrsV = VerifyingKey<E>,
+    >,
 {
     type ProvingKey = ProvingKey<E>;
     type VerifyingKey = VerifyingKey<E>;
     type Proof = Proof<E>;
-    type ProcessedVerifyingKey = PreparedVerifyingKey<E>;
+    type ProcessedVerifyingKey = VerifyingKey<E>;
     type Error = PolymathError;
 
     fn circuit_specific_setup<C: ConstraintSynthesizer<E::ScalarField>, R: RngCore>(
@@ -87,25 +97,29 @@ where
         // Self::create_random_proof_with_reduction(circuit, pk, rng)
     }
 
-    fn process_vk(
-        circuit_vk: &Self::VerifyingKey,
-    ) -> Result<Self::ProcessedVerifyingKey, Self::Error> {
-        Ok(prepare_verifying_key(circuit_vk))
+    fn process_vk(vk: &Self::VerifyingKey) -> Result<Self::ProcessedVerifyingKey, Self::Error> {
+        Ok(vk.clone())
     }
 
     fn verify_with_processed_vk(
-        circuit_pvk: &Self::ProcessedVerifyingKey,
+        vk: &Self::ProcessedVerifyingKey,
         x: &[E::ScalarField],
         proof: &Self::Proof,
     ) -> Result<bool, Self::Error> {
-        Ok(Self::verify_proof(&circuit_pvk, proof, &x)?)
+        Ok(Self::verify_proof(vk, proof, &x)?)
     }
 }
 
 impl<E: Pairing, T, PCS> CircuitSpecificSetupSNARK<E::ScalarField> for Polymath<E, T, PCS>
 where
     T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<E::ScalarField>,
+    PCS: UnivariatePCS<
+        E::ScalarField,
+        Commitment = E::G1Affine,
+        EvalProof = E::G1Affine,
+        Transcript = T,
+        SrsV = VerifyingKey<E>,
+    >,
 {
 }
 
@@ -115,4 +129,6 @@ pub enum PolymathError {
     SynthesisError(#[from] SynthesisError),
     #[error(transparent)]
     SerializationError(#[from] SerializationError),
+    #[error(transparent)]
+    PCSError(#[from] PCSError),
 }
