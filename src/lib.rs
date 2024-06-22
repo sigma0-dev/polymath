@@ -40,6 +40,7 @@ pub mod prover;
 /// Verify proofs for the Polymath zkSNARK construction.
 pub mod verifier;
 
+mod common;
 mod r#macro;
 mod pcs;
 #[cfg(test)]
