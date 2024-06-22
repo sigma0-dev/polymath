@@ -25,7 +25,7 @@ pub struct VerifyingKey<E: Pairing> {
     pub one_g2: E::G2Affine,
     /// `[x]₂` - the `x` trapdoor (toxic random secret) hidden in `G2`.
     pub x_g2: E::G2Affine,
-    /// sigma
+    /// `𝜎 = n + 3` - the exponent for "virtual" trapdoor `y = x^𝜎`
     pub sigma: u64,
 }
 

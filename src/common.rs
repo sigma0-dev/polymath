@@ -7,6 +7,12 @@ use crate::{to_bytes, Polymath, PolymathError, VerifyingKey};
 
 use super::Proof;
 
+/// `𝛼` is negative, we use it as an exponent of `y`: `y^𝛼 = (1/y)^(-𝛼)`
+pub const MINUS_ALPHA: u64 = 3;
+
+/// `𝛾` is negative, we use it as an exponent of `y`: `y^𝛾 = (1/y)^(-𝛾)`
+pub const MINUS_GAMMA: u64 = 5;
+
 impl<E: Pairing, T, PCS> Polymath<E, T, PCS>
 where
     T: Transcript<Challenge = E::ScalarField>,
@@ -32,22 +38,27 @@ where
     }
 
     /// y1 = x1^sigma
-    pub(crate) fn compute_y1(sigma: u64, x1: E::ScalarField) -> E::ScalarField {
+    pub(crate) fn compute_y1(x1: E::ScalarField, sigma: u64) -> E::ScalarField {
         x1.pow(&[sigma])
     }
 
+    /// Compute `y^(exp)`, where exp is negative. `minus_exp` is thus positive.
+    pub(crate) fn neg_power(y: E::ScalarField, minus_exp: u64) -> E::ScalarField {
+        y.inverse().unwrap().pow(&[minus_exp])
+    }
+
     pub(crate) fn compute_pi_at_x1(
-        a_at_x1: E::ScalarField,
         public_inputs: &[E::ScalarField],
         x1: E::ScalarField,
-        y1: E::ScalarField,
+        y1_gamma: E::ScalarField,
     ) -> E::ScalarField {
         todo!()
     }
 
     pub(crate) fn compute_c_at_x1(
         x1: E::ScalarField,
-        y1: E::ScalarField,
+        y1_gamma: E::ScalarField,
+        y1_alpha: E::ScalarField,
         a_at_x1: E::ScalarField,
         pi_at_x1: E::ScalarField,
     ) -> E::ScalarField {
