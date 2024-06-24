@@ -19,13 +19,14 @@ use ark_crypto_primitives::snark::*;
 use ark_ec::pairing::Pairing;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
-use ark_std::marker::PhantomData;
 use ark_std::{fmt::Debug, rand::RngCore};
+use ark_std::marker::PhantomData;
 use flexible_transcript::Transcript;
 
 use crate::pcs::{PCSError, UnivariatePCS};
 
 pub use self::data_structures::*;
+pub use self::prover::*;
 pub use self::verifier::*;
 
 /// Data structures used by the prover, verifier, and generator.
@@ -94,8 +95,7 @@ where
         circuit: C,
         rng: &mut R,
     ) -> Result<Self::Proof, Self::Error> {
-        todo!();
-        // Self::create_random_proof_with_reduction(circuit, pk, rng)
+        Self::create_proof(circuit, pk, rng)
     }
 
     fn process_vk(vk: &Self::VerifyingKey) -> Result<Self::ProcessedVerifyingKey, Self::Error> {
