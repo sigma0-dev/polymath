@@ -38,7 +38,7 @@ where
         let y1_alpha = Self::neg_power(y1, MINUS_ALPHA);
 
         // compute c_at_x1
-        let c_at_x1 = Self::compute_c_at_x1(x1, y1_gamma, y1_alpha, proof.a_at_x1, pi_at_x1);
+        let c_at_x1 = Self::compute_c_at_x1(vk, x1, y1_gamma, y1_alpha, proof.a_at_x1, pi_at_x1);
 
         PCS::batch_verify_single_point(
             vk,

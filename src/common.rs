@@ -72,13 +72,19 @@ where
     }
 
     pub(crate) fn compute_c_at_x1(
+        vk: &VerifyingKey<E>,
         x1: E::ScalarField,
         y1_gamma: E::ScalarField,
         y1_alpha: E::ScalarField,
         a_at_x1: E::ScalarField,
         pi_at_x1: E::ScalarField,
     ) -> E::ScalarField {
-        todo!()
+        let z_h_no_k_at_x1 = Self::z_h_wo_k(vk, x1);
+
+        let m0 = E::ScalarField::from(vk.m0);
+        let n = E::ScalarField::from(vk.n);
+
+        ((a_at_x1 + y1_gamma) * a_at_x1 - pi_at_x1 * z_h_no_k_at_x1 * m0 / n) / y1_alpha
     }
 
     fn z_tilde_j(public_inputs: &[E::ScalarField], j: u64) -> E::ScalarField {
@@ -89,5 +95,10 @@ where
             1 => public_inputs[j] - public_inputs[j - 1] / two,
             _ => unreachable!(),
         }
+    }
+
+    fn z_h_wo_k(vk: &VerifyingKey<E>, x1: E::ScalarField) -> E::ScalarField {
+        let one = E::ScalarField::one();
+        (x1.pow(&[vk.n]) - one) / (x1.pow(&[vk.m0]) - one)
     }
 }
