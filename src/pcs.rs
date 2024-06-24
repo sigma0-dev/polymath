@@ -37,7 +37,6 @@ pub trait UnivariatePCS<F: Field> {
         polynomials: &[Self::Polynomial],
         point: F,
         values: &[Option<F>],
-        transcript: &Self::Transcript,
     ) -> Result<(Vec<F>, Self::EvalProof), PCSError>;
 
     fn verify(
