@@ -25,8 +25,18 @@ pub struct VerifyingKey<E: Pairing> {
     pub one_g2: E::G2Affine,
     /// `[x]₂` - the `x` trapdoor (toxic random secret) hidden in `G2`.
     pub x_g2: E::G2Affine,
+    /// `n` - the domain size. Must be a power of 2.
+    pub n: u64,
+    /// `m₀` - the public input subdomain size. Must be a power of 2.
+    pub m0: u64,
     /// `𝜎 = n + 3` - the exponent for "virtual" trapdoor `y = x^𝜎`
     pub sigma: u64,
+    /// `𝜔` - root of unity, element of the domain group: `X^n - 1 = 0`,
+    /// `𝜔^(j·n) = 1`
+    pub omega: E::ScalarField,
+    /// `𝜈 = 𝜔^(n/m₀)` - root of unity, element of the public input subdomain group: `X^m₀ - 1 = 0`,
+    /// `𝜈^(j·m₀) = 1`
+    pub nu: E::ScalarField,
 }
 
 ////////////////////////////////////////////////////////////////////////////////

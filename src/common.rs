@@ -1,5 +1,6 @@
 use ark_ec::pairing::Pairing;
 use ark_ff::Field;
+use ark_std::{One, Zero};
 use flexible_transcript::Transcript;
 
 use crate::pcs::UnivariatePCS;
@@ -48,11 +49,26 @@ where
     }
 
     pub(crate) fn compute_pi_at_x1(
+        vk: &VerifyingKey<E>,
         public_inputs: &[E::ScalarField],
         x1: E::ScalarField,
         y1_gamma: E::ScalarField,
     ) -> E::ScalarField {
-        todo!()
+        let mut sum = E::ScalarField::zero();
+
+        let mut lagrange_k_j_at_x1_numerator =
+            (x1.pow(&[vk.m0]) - E::ScalarField::one()) / &E::ScalarField::from(vk.m0);
+        let mut nu_exp_j = E::ScalarField::one();
+
+        for j in 0..vk.m0 {
+            let lagrange_k_j_at_x1 = lagrange_k_j_at_x1_numerator / (x1 - nu_exp_j);
+            let to_add = Self::z_tilde_j(public_inputs, j) * lagrange_k_j_at_x1;
+            lagrange_k_j_at_x1_numerator *= vk.nu;
+            nu_exp_j *= vk.nu;
+            sum += to_add;
+        }
+
+        sum * y1_gamma
     }
 
     pub(crate) fn compute_c_at_x1(
@@ -63,5 +79,15 @@ where
         pi_at_x1: E::ScalarField,
     ) -> E::ScalarField {
         todo!()
+    }
+
+    fn z_tilde_j(public_inputs: &[E::ScalarField], j: u64) -> E::ScalarField {
+        let two = &E::ScalarField::from(2);
+        let j = j as usize;
+        match j % 2 {
+            0 => (public_inputs[j] + public_inputs[j + 1]) / two,
+            1 => public_inputs[j] - public_inputs[j - 1] / two,
+            _ => unreachable!(),
+        }
     }
 }

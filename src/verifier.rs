@@ -33,7 +33,7 @@ where
         let y1: E::ScalarField = Self::compute_y1(x1, vk.sigma);
 
         let y1_gamma = Self::neg_power(y1, MINUS_GAMMA);
-        let pi_at_x1 = Self::compute_pi_at_x1(public_inputs, x1, y1_gamma);
+        let pi_at_x1 = Self::compute_pi_at_x1(vk, public_inputs, x1, y1_gamma);
 
         let y1_alpha = Self::neg_power(y1, MINUS_ALPHA);
 
