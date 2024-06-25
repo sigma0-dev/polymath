@@ -1,9 +1,9 @@
 use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 
-use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
 use crate::pcs::{HasPCSVerifyingKey, UnivariatePCS};
+use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 

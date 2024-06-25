@@ -2,8 +2,8 @@ use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_std::{One, Zero};
 
-use crate::{Polymath, PolymathError, to_bytes, Transcript, VerifyingKey};
 use crate::pcs::UnivariatePCS;
+use crate::{to_bytes, Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 

@@ -20,8 +20,8 @@ use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
-use ark_std::{clone::Clone, fmt::Debug, rand::RngCore, result::Result};
 use ark_std::marker::PhantomData;
+use ark_std::{clone::Clone, fmt::Debug, rand::RngCore, result::Result};
 
 use crate::pcs::{PCSError, UnivariatePCS};
 

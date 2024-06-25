@@ -3,8 +3,8 @@ use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem, OptimizationGoal};
 use ark_std::rand::RngCore;
 
-use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 use crate::pcs::UnivariatePCS;
+use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
 impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
