@@ -1,4 +1,3 @@
-use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_std::{One, Zero};
 

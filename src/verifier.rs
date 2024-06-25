@@ -1,4 +1,3 @@
-use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 
 use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
