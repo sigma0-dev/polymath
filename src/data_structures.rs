@@ -1,7 +1,8 @@
 use ark_ec::pairing::Pairing;
+use ark_ff::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
-use crate::pcs::{PCSCommittingKey, PCSVerifyingKey};
+use crate::pcs::{HasPCSCommittingKey, HasPCSVerifyingKey, UnivariatePCS};
 
 /// Proof in the Polymath zkSNARK.
 #[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
@@ -19,14 +20,9 @@ pub struct Proof<E: Pairing> {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Verification key in the Polymath zkSNARK.
-#[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct VerifyingKey<E: Pairing> {
-    /// `[1]₁` - the `G1` group generator.
-    pub one_g1: E::G1Affine,
-    /// `[1]₂` - the `G2` group generator.
-    pub one_g2: E::G2Affine,
-    /// `[x]₂` - the `x` trapdoor (toxic random secret) hidden in `G2`.
-    pub x_g2: E::G2Affine,
+#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
+pub struct VerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
+    pub pcs_vk: PCS::VerifyingKey,
     /// `n` - the domain size. Must be a power of 2.
     pub n: u64,
     /// `m₀` - the public input subdomain size. Must be a power of 2.
@@ -35,38 +31,41 @@ pub struct VerifyingKey<E: Pairing> {
     pub sigma: u64,
     /// `𝜔` - root of unity, element of the domain group: `X^n - 1 = 0`,
     /// `𝜔^(j·n) = 1`
-    pub omega: E::ScalarField,
+    pub omega: F,
     /// `𝜈 = 𝜔^(n/m₀)` - root of unity, element of the public input subdomain group: `X^m₀ - 1 = 0`,
     /// `𝜈^(j·m₀) = 1`
-    pub nu: E::ScalarField,
+    pub nu: F,
 }
 
-impl<E: Pairing> PCSVerifyingKey for VerifyingKey<E> {}
+// TODO embed PCSVerifying key instead of hardcoding its elements
 
-////////////////////////////////////////////////////////////////////////////////
-
-/// Preprocessed verification key parameters are supposed to enable faster verification
-/// at the expense of larger size in memory.
-#[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct PreparedVerifyingKey<E: Pairing> {
-    /// The unprepared verification key.
-    pub vk: VerifyingKey<E>,
+impl<F: Field, PCS: UnivariatePCS<F>> HasPCSVerifyingKey<F, PCS> for VerifyingKey<F, PCS> {
+    fn get_pcs_vk(&self) -> &PCS::VerifyingKey {
+        &self.pcs_vk
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Proving key for the Polymath zkSNARK.
-#[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<E: Pairing> {
+#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
+pub struct ProvingKey<F: Field, PCS: UnivariatePCS<F>> {
+    pub pcs_ck: PCS::CommittingKey,
     /// The underlying verification key.
-    pub vk: VerifyingKey<E>,
+    pub vk: VerifyingKey<F, PCS>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
-    pub x_powers_g1: Vec<E::G1Affine>,
+    pub x_powers_g1: Vec<PCS::Commitment>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.
-    pub x_powers_y_alpha_g1: Vec<E::G1Affine>,
+    pub x_powers_y_alpha_g1: Vec<PCS::Commitment>,
     /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ]₁` - linear combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1`.
-    pub uw_j_lcs_by_y_alpha_g1: Vec<E::G1Affine>,
+    pub uw_j_lcs_by_y_alpha_g1: Vec<PCS::Commitment>,
     // TODO there's more
 }
 
-impl<E: Pairing> PCSCommittingKey for ProvingKey<E> {}
+// TODO embed PCSCommittingKey key instead of hardcoding its elements
+
+impl<F: Field, PCS: UnivariatePCS<F>> HasPCSCommittingKey<F, PCS> for ProvingKey<F, PCS> {
+    fn get_pcs_ck(&self) -> &PCS::CommittingKey {
+        &self.pcs_ck
+    }
+}

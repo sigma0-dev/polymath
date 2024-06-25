@@ -2,8 +2,8 @@ use ark_ec::pairing::Pairing;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem, OptimizationGoal};
 use ark_std::rand::RngCore;
 
+use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 use crate::pcs::UnivariatePCS;
-use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript, VerifyingKey};
 
 impl<E: Pairing, T, PCS> Polymath<E, T, PCS>
 where
@@ -13,12 +13,11 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        VerifyingKey = VerifyingKey<E>,
     >,
 {
     pub(crate) fn create_proof<C: ConstraintSynthesizer<E::ScalarField>, R: RngCore>(
         circuit: C,
-        pk: &ProvingKey<E>,
+        pk: &ProvingKey<E::ScalarField, PCS>,
         rng: &mut R,
     ) -> Result<Proof<E>, PolymathError> {
         let prover_time = start_timer!(|| "Polymath::Prover");

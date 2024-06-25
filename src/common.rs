@@ -2,8 +2,8 @@ use ark_ec::pairing::Pairing;
 use ark_ff::Field;
 use ark_std::{One, Zero};
 
+use crate::{Polymath, PolymathError, to_bytes, Transcript, VerifyingKey};
 use crate::pcs::UnivariatePCS;
-use crate::{to_bytes, Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 
@@ -21,7 +21,6 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        VerifyingKey = VerifyingKey<E>,
     >,
 {
     pub(crate) fn compute_x1(
@@ -48,7 +47,7 @@ where
     }
 
     pub(crate) fn compute_pi_at_x1(
-        vk: &VerifyingKey<E>,
+        vk: &VerifyingKey<E::ScalarField, PCS>,
         public_inputs: &[E::ScalarField],
         x1: E::ScalarField,
         y1_gamma: E::ScalarField,
@@ -71,7 +70,7 @@ where
     }
 
     pub(crate) fn compute_c_at_x1(
-        vk: &VerifyingKey<E>,
+        vk: &VerifyingKey<E::ScalarField, PCS>,
         x1: E::ScalarField,
         y1_gamma: E::ScalarField,
         y1_alpha: E::ScalarField,
@@ -96,7 +95,7 @@ where
         }
     }
 
-    fn z_h_wo_k(vk: &VerifyingKey<E>, x1: E::ScalarField) -> E::ScalarField {
+    fn z_h_wo_k(vk: &VerifyingKey<E::ScalarField, PCS>, x1: E::ScalarField) -> E::ScalarField {
         let one = E::ScalarField::one();
         (x1.pow([vk.n]) - one) / (x1.pow([vk.m0]) - one)
     }

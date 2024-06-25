@@ -1,8 +1,8 @@
 use ark_ec::pairing::Pairing;
 
-use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
-use crate::pcs::UnivariatePCS;
 use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
+use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
+use crate::pcs::{HasPCSVerifyingKey, UnivariatePCS};
 
 use super::Proof;
 
@@ -14,13 +14,12 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        VerifyingKey = VerifyingKey<E>,
     >,
 {
     /// Verify a Polymath proof `proof` against the verification key `vk`,
     /// with respect to the instance `public_inputs`.
     pub(crate) fn verify_proof(
-        vk: &VerifyingKey<E>,
+        vk: &VerifyingKey<E::ScalarField, PCS>,
         proof: &Proof<E>,
         public_inputs: &[E::ScalarField],
     ) -> Result<bool, PolymathError> {
@@ -40,7 +39,7 @@ where
         let c_at_x1 = Self::compute_c_at_x1(vk, x1, y1_gamma, y1_alpha, proof.a_at_x1, pi_at_x1);
 
         PCS::batch_verify_single_point(
-            vk,
+            vk.get_pcs_vk(),
             &[proof.a_g1, proof.c_g1],
             x1,
             &[proof.a_at_x1, c_at_x1],

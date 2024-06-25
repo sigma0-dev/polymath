@@ -19,8 +19,8 @@ use ark_crypto_primitives::snark::*;
 use ark_ec::pairing::Pairing;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
+use ark_std::{clone::Clone, fmt::Debug, rand::RngCore, result::Result};
 use ark_std::marker::PhantomData;
-use ark_std::{fmt::Debug, rand::RngCore};
 
 use crate::pcs::{PCSError, UnivariatePCS};
 
@@ -55,7 +55,6 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        VerifyingKey = VerifyingKey<E>,
     >,
 {
     _p: PhantomData<(E, T, PCS)>,
@@ -69,13 +68,12 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        VerifyingKey = VerifyingKey<E>,
     >,
 {
-    type ProvingKey = ProvingKey<E>;
-    type VerifyingKey = VerifyingKey<E>;
+    type ProvingKey = ProvingKey<E::ScalarField, PCS>;
+    type VerifyingKey = VerifyingKey<E::ScalarField, PCS>;
     type Proof = Proof<E>;
-    type ProcessedVerifyingKey = VerifyingKey<E>;
+    type ProcessedVerifyingKey = VerifyingKey<E::ScalarField, PCS>;
     type Error = PolymathError;
 
     fn circuit_specific_setup<C: ConstraintSynthesizer<E::ScalarField>, R: RngCore>(
@@ -118,7 +116,6 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        VerifyingKey = VerifyingKey<E>,
     >,
 {
 }

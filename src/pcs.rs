@@ -3,10 +3,10 @@ use std::marker::PhantomData;
 use ark_ec::pairing::Pairing;
 use ark_ff::Field;
 use ark_poly::Polynomial;
-use ark_serialize::SerializationError;
-use ark_std::{fmt::Debug, rand::Rng};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError};
+use ark_std::{clone::Clone, fmt::Debug, rand::Rng};
 
-use crate::{ProvingKey, Transcript, VerifyingKey};
+use crate::Transcript;
 
 #[derive(thiserror::Error, Debug)]
 pub enum PCSError {
@@ -14,16 +14,21 @@ pub enum PCSError {
     SerializationError(#[from] SerializationError),
 }
 
-pub trait PCSVerifyingKey: Clone + Debug {}
+pub trait HasPCSCommittingKey<F: Field, PCS: UnivariatePCS<F>> {
+    fn get_pcs_ck(&self) -> &PCS::CommittingKey;
+}
 
-pub trait PCSCommittingKey: Clone + Debug {}
+pub trait HasPCSVerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
+    fn get_pcs_vk(&self) -> &PCS::VerifyingKey;
+}
 
-pub trait UnivariatePCS<F: Field> {
+// TODO remove `: Clone`
+pub trait UnivariatePCS<F: Field>: Clone {
     type Polynomial: Polynomial<F>;
-    type Commitment: Clone + Eq + Debug;
-    type EvalProof: Clone + Eq + Debug;
-    type CommittingKey: PCSCommittingKey;
-    type VerifyingKey: PCSVerifyingKey;
+    type Commitment: Clone + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type EvalProof: Clone + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type CommittingKey: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type VerifyingKey: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
     type Transcript: Transcript<Challenge = F>;
 
     fn setup<R: Rng>(
@@ -67,9 +72,25 @@ pub trait UnivariatePCS<F: Field> {
     ) -> Result<bool, PCSError>;
 }
 
+#[derive(Clone)] // TODO compiler made me do it
 pub struct KZG<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::ScalarField>>
 {
     _ept: PhantomData<(E, P, T)>,
+}
+
+#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
+pub struct KZGCommittingKey<E: Pairing> {
+    _e: PhantomData<E>,
+}
+
+#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
+pub struct KZGVerifyingKey<E: Pairing> {
+    /// `[1]₁` - the `G1` group generator.
+    pub one_g1: E::G1Affine,
+    /// `[1]₂` - the `G2` group generator.
+    pub one_g2: E::G2Affine,
+    /// `[x]₂` - the `x` trapdoor (toxic random secret) hidden in `G2`.
+    pub x_g2: E::G2Affine,
 }
 
 impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::ScalarField>>
@@ -78,8 +99,8 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
     type Polynomial = P;
     type Commitment = E::G1Affine;
     type EvalProof = E::G1Affine;
-    type CommittingKey = ProvingKey<E>;
-    type VerifyingKey = VerifyingKey<E>;
+    type CommittingKey = KZGCommittingKey<E>;
+    type VerifyingKey = KZGVerifyingKey<E>;
     type Transcript = T;
 
     fn setup<R: Rng>(
