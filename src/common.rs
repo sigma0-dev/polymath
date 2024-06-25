@@ -2,8 +2,8 @@ use ark_ec::pairing::Pairing;
 use ark_ff::Field;
 use ark_std::{One, Zero};
 
-use crate::{Polymath, PolymathError, to_bytes, Transcript, VerifyingKey};
 use crate::pcs::UnivariatePCS;
+use crate::{to_bytes, Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 
@@ -39,12 +39,12 @@ where
 
     /// y1 = x1^sigma
     pub(crate) fn compute_y1(x1: E::ScalarField, sigma: u64) -> E::ScalarField {
-        x1.pow(&[sigma])
+        x1.pow([sigma])
     }
 
     /// Compute `y^(exp)`, where exp is negative. `minus_exp` is thus positive.
     pub(crate) fn neg_power(y: E::ScalarField, minus_exp: u64) -> E::ScalarField {
-        y.inverse().unwrap().pow(&[minus_exp])
+        y.inverse().unwrap().pow([minus_exp])
     }
 
     pub(crate) fn compute_pi_at_x1(
@@ -56,7 +56,7 @@ where
         let mut sum = E::ScalarField::zero();
 
         let mut lagrange_k_j_at_x1_numerator =
-            (x1.pow(&[vk.m0]) - E::ScalarField::one()) / &E::ScalarField::from(vk.m0);
+            (x1.pow([vk.m0]) - E::ScalarField::one()) / &E::ScalarField::from(vk.m0);
         let mut nu_exp_j = E::ScalarField::one();
 
         for j in 0..vk.m0 {
@@ -98,6 +98,6 @@ where
 
     fn z_h_wo_k(vk: &VerifyingKey<E>, x1: E::ScalarField) -> E::ScalarField {
         let one = E::ScalarField::one();
-        (x1.pow(&[vk.n]) - one) / (x1.pow(&[vk.m0]) - one)
+        (x1.pow([vk.n]) - one) / (x1.pow([vk.m0]) - one)
     }
 }

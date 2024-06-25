@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 // We're going to use the BLS12-381 pairing-friendly elliptic curve.
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::snark::{CircuitSpecificSetupSNARK, SNARK};
-use ark_ff::{Field, Fp};
+use ark_ff::Field;
 use ark_poly::univariate::DensePolynomial;
 // We'll use these interfaces to construct our circuit.
 use ark_relations::{

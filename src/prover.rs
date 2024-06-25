@@ -2,8 +2,8 @@ use ark_ec::pairing::Pairing;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem, OptimizationGoal};
 use ark_std::rand::RngCore;
 
-use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript, VerifyingKey};
 use crate::pcs::UnivariatePCS;
+use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript, VerifyingKey};
 
 impl<E: Pairing, T, PCS> Polymath<E, T, PCS>
 where

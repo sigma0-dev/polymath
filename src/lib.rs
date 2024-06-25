@@ -19,15 +19,13 @@ use ark_crypto_primitives::snark::*;
 use ark_ec::pairing::Pairing;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
-use ark_std::{fmt::Debug, rand::RngCore};
 use ark_std::marker::PhantomData;
+use ark_std::{fmt::Debug, rand::RngCore};
 
 use crate::pcs::{PCSError, UnivariatePCS};
 
 pub use self::data_structures::*;
-pub use self::prover::*;
 pub use self::transcript::*;
-pub use self::verifier::*;
 
 /// Data structures used by the prover, verifier, and generator.
 pub mod data_structures;
@@ -108,7 +106,7 @@ where
         x: &[E::ScalarField],
         proof: &Self::Proof,
     ) -> Result<bool, Self::Error> {
-        Ok(Self::verify_proof(vk, proof, &x)?)
+        Self::verify_proof(vk, proof, x)
     }
 }
 
