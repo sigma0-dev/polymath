@@ -1,10 +1,9 @@
 use ark_ec::pairing::Pairing;
 use ark_ff::Field;
 use ark_std::{One, Zero};
-use flexible_transcript::Transcript;
 
+use crate::{Polymath, PolymathError, to_bytes, Transcript, VerifyingKey};
 use crate::pcs::UnivariatePCS;
-use crate::{to_bytes, Polymath, PolymathError, VerifyingKey};
 
 use super::Proof;
 
@@ -22,7 +21,7 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        SrsV = VerifyingKey<E>,
+        VerifyingKey = VerifyingKey<E>,
     >,
 {
     pub(crate) fn compute_x1(

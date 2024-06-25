@@ -1,6 +1,8 @@
 use ark_ec::pairing::Pairing;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
+use crate::pcs::{PCSCommittingKey, PCSVerifyingKey};
+
 /// Proof in the Polymath zkSNARK.
 #[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct Proof<E: Pairing> {
@@ -39,6 +41,8 @@ pub struct VerifyingKey<E: Pairing> {
     pub nu: E::ScalarField,
 }
 
+impl<E: Pairing> PCSVerifyingKey for VerifyingKey<E> {}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Preprocessed verification key parameters are supposed to enable faster verification
@@ -64,3 +68,5 @@ pub struct ProvingKey<E: Pairing> {
     pub uw_j_lcs_by_y_alpha_g1: Vec<E::G1Affine>,
     // TODO there's more
 }
+
+impl<E: Pairing> PCSCommittingKey for ProvingKey<E> {}

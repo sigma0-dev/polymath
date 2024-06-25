@@ -1,9 +1,8 @@
 use ark_ec::pairing::Pairing;
-use flexible_transcript::Transcript;
 
 use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
 use crate::pcs::UnivariatePCS;
-use crate::{Polymath, PolymathError, VerifyingKey};
+use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 
@@ -15,7 +14,7 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        SrsV = VerifyingKey<E>,
+        VerifyingKey = VerifyingKey<E>,
     >,
 {
     /// Verify a Polymath proof `proof` against the verification key `vk`,

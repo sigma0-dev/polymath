@@ -21,12 +21,12 @@ use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
 use ark_std::{fmt::Debug, rand::RngCore};
 use ark_std::marker::PhantomData;
-use flexible_transcript::Transcript;
 
 use crate::pcs::{PCSError, UnivariatePCS};
 
 pub use self::data_structures::*;
 pub use self::prover::*;
+pub use self::transcript::*;
 pub use self::verifier::*;
 
 /// Data structures used by the prover, verifier, and generator.
@@ -43,9 +43,10 @@ pub mod verifier;
 
 mod common;
 mod r#macro;
-mod pcs;
+pub mod pcs;
 #[cfg(test)]
 mod test;
+pub mod transcript;
 
 /// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
 pub struct Polymath<E: Pairing, T, PCS>
@@ -56,7 +57,7 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        SrsV = VerifyingKey<E>,
+        VerifyingKey = VerifyingKey<E>,
     >,
 {
     _p: PhantomData<(E, T, PCS)>,
@@ -70,7 +71,7 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        SrsV = VerifyingKey<E>,
+        VerifyingKey = VerifyingKey<E>,
     >,
 {
     type ProvingKey = ProvingKey<E>;
@@ -119,7 +120,7 @@ where
         Commitment = E::G1Affine,
         EvalProof = E::G1Affine,
         Transcript = T,
-        SrsV = VerifyingKey<E>,
+        VerifyingKey = VerifyingKey<E>,
     >,
 {
 }
