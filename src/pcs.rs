@@ -22,7 +22,7 @@ pub trait HasPCSVerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
     fn get_pcs_vk(&self) -> &PCS::VerifyingKey;
 }
 
-// TODO remove `: Clone`
+// `: Clone` bound is needed by Polymath to implement SNARK associated types (that are all `: Clone`)
 pub trait UnivariatePCS<F: Field>: Clone {
     type Polynomial: Polynomial<F>;
     type Commitment: Clone + Copy + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
@@ -72,7 +72,7 @@ pub trait UnivariatePCS<F: Field>: Clone {
     ) -> Result<bool, PCSError>;
 }
 
-#[derive(Clone)] // TODO compiler made me do it
+#[derive(Clone)]
 pub struct KZG<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::ScalarField>>
 {
     _ept: PhantomData<(E, P, T)>,
