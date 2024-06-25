@@ -1,4 +1,5 @@
 use ark_ec::pairing::Pairing;
+use ark_ff::PrimeField;
 
 use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
@@ -6,29 +7,24 @@ use crate::pcs::{HasPCSVerifyingKey, UnivariatePCS};
 
 use super::Proof;
 
-impl<E: Pairing, T, PCS> Polymath<E, T, PCS>
+impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
-    T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<
-        E::ScalarField,
-        Commitment = E::G1Affine,
-        EvalProof = E::G1Affine,
-        Transcript = T,
-    >,
+    T: Transcript<Challenge = F>,
+    PCS: UnivariatePCS<F, Transcript = T>,
 {
     /// Verify a Polymath proof `proof` against the verification key `vk`,
     /// with respect to the instance `public_inputs`.
     pub(crate) fn verify_proof(
-        vk: &VerifyingKey<E::ScalarField, PCS>,
-        proof: &Proof<E>,
-        public_inputs: &[E::ScalarField],
+        vk: &VerifyingKey<F, PCS>,
+        proof: &Proof<F, PCS>,
+        public_inputs: &[F],
     ) -> Result<bool, PolymathError> {
         let mut t = T::new(b"polymath");
 
         // compute challenge x1
-        let x1: E::ScalarField = Self::compute_x1(&mut t, public_inputs, proof)?;
+        let x1: F = Self::compute_x1(&mut t, public_inputs, proof)?;
         // compute y1=x1^sigma
-        let y1: E::ScalarField = Self::compute_y1(x1, vk.sigma);
+        let y1: F = Self::compute_y1(x1, vk.sigma);
 
         let y1_gamma = Self::neg_power(y1, MINUS_GAMMA);
         let pi_at_x1 = Self::compute_pi_at_x1(vk, public_inputs, x1, y1_gamma);

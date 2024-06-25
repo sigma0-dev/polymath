@@ -17,6 +17,7 @@ extern crate ark_std;
 
 use ark_crypto_primitives::snark::*;
 use ark_ec::pairing::Pairing;
+use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
 use ark_std::{clone::Clone, fmt::Debug, rand::RngCore, result::Result};
@@ -47,36 +48,26 @@ mod test;
 pub mod transcript;
 
 /// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
-pub struct Polymath<E: Pairing, T, PCS>
+pub struct Polymath<F: PrimeField, T, PCS>
 where
-    T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<
-        E::ScalarField,
-        Commitment = E::G1Affine,
-        EvalProof = E::G1Affine,
-        Transcript = T,
-    >,
+    T: Transcript<Challenge = F>,
+    PCS: UnivariatePCS<F, Transcript = T>,
 {
-    _p: PhantomData<(E, T, PCS)>,
+    _p: PhantomData<(F, T, PCS)>,
 }
 
-impl<E: Pairing, T, PCS> SNARK<E::ScalarField> for Polymath<E, T, PCS>
+impl<F: PrimeField, T, PCS> SNARK<F> for Polymath<F, T, PCS>
 where
-    T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<
-        E::ScalarField,
-        Commitment = E::G1Affine,
-        EvalProof = E::G1Affine,
-        Transcript = T,
-    >,
+    T: Transcript<Challenge = F>,
+    PCS: UnivariatePCS<F, Transcript = T>,
 {
-    type ProvingKey = ProvingKey<E::ScalarField, PCS>;
-    type VerifyingKey = VerifyingKey<E::ScalarField, PCS>;
-    type Proof = Proof<E>;
-    type ProcessedVerifyingKey = VerifyingKey<E::ScalarField, PCS>;
+    type ProvingKey = ProvingKey<F, PCS>;
+    type VerifyingKey = VerifyingKey<F, PCS>;
+    type Proof = Proof<F, PCS>;
+    type ProcessedVerifyingKey = VerifyingKey<F, PCS>;
     type Error = PolymathError;
 
-    fn circuit_specific_setup<C: ConstraintSynthesizer<E::ScalarField>, R: RngCore>(
+    fn circuit_specific_setup<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
         rng: &mut R,
     ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error> {
@@ -87,7 +78,7 @@ where
         // Ok((pk, vk))
     }
 
-    fn prove<C: ConstraintSynthesizer<E::ScalarField>, R: RngCore>(
+    fn prove<C: ConstraintSynthesizer<F>, R: RngCore>(
         pk: &Self::ProvingKey,
         circuit: C,
         rng: &mut R,
@@ -101,22 +92,17 @@ where
 
     fn verify_with_processed_vk(
         vk: &Self::ProcessedVerifyingKey,
-        x: &[E::ScalarField],
+        x: &[F],
         proof: &Self::Proof,
     ) -> Result<bool, Self::Error> {
         Self::verify_proof(vk, proof, x)
     }
 }
 
-impl<E: Pairing, T, PCS> CircuitSpecificSetupSNARK<E::ScalarField> for Polymath<E, T, PCS>
+impl<F: PrimeField, T, PCS> CircuitSpecificSetupSNARK<F> for Polymath<F, T, PCS>
 where
-    T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<
-        E::ScalarField,
-        Commitment = E::G1Affine,
-        EvalProof = E::G1Affine,
-        Transcript = T,
-    >,
+    T: Transcript<Challenge = F>,
+    PCS: UnivariatePCS<F, Transcript = T>,
 {
 }
 

@@ -25,10 +25,10 @@ pub trait HasPCSVerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
 // TODO remove `: Clone`
 pub trait UnivariatePCS<F: Field>: Clone {
     type Polynomial: Polynomial<F>;
-    type Commitment: Clone + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
-    type EvalProof: Clone + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
-    type CommittingKey: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
-    type VerifyingKey: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type Commitment: Clone + Copy + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type EvalProof: Clone + Copy + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type CommittingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type VerifyingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
     type Transcript: Transcript<Challenge = F>;
 
     fn setup<R: Rng>(
@@ -78,12 +78,12 @@ pub struct KZG<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challeng
     _ept: PhantomData<(E, P, T)>,
 }
 
-#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Clone, Copy, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub struct KZGCommittingKey<E: Pairing> {
     _e: PhantomData<E>,
 }
 
-#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
+#[derive(Clone, Copy, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub struct KZGVerifyingKey<E: Pairing> {
     /// `[1]₁` - the `G1` group generator.
     pub one_g1: E::G1Affine,

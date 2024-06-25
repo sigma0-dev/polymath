@@ -6,15 +6,15 @@ use crate::pcs::{HasPCSCommittingKey, HasPCSVerifyingKey, UnivariatePCS};
 
 /// Proof in the Polymath zkSNARK.
 #[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct Proof<E: Pairing> {
+pub struct Proof<F: Field, PCS: UnivariatePCS<F>> {
     /// `[a]₁` - commitment to `A(X)`.
-    pub a_g1: E::G1Affine,
+    pub a_g1: PCS::Commitment,
     /// `[c]₁` - commitment to `C(X)`.
-    pub c_g1: E::G1Affine,
+    pub c_g1: PCS::Commitment,
     /// `A(x1)` - evaluation of `A(X)` at point `x1`.
-    pub a_at_x1: E::ScalarField,
+    pub a_at_x1: F,
     /// `[d]₁` - commitment to quotient polynomial `D(X)`.
-    pub d_g1: E::G1Affine,
+    pub d_g1: PCS::EvalProof,
 }
 
 ////////////////////////////////////////////////////////////////////////////////

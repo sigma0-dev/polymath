@@ -149,7 +149,7 @@ fn test_mimc_polymath() {
     // We're going to use the Polymath proving system.
 
     type Polymath = sigma0_polymath::Polymath<
-        Bls12_381,
+        Fr,
         FieldChallengeTranscript<Fr>,
         KZG<Bls12_381, DensePolynomial<Fr>, FieldChallengeTranscript<Fr>>,
     >;

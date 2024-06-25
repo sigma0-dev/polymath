@@ -1,5 +1,5 @@
 use ark_ec::pairing::Pairing;
-use ark_ff::Field;
+use ark_ff::PrimeField;
 use ark_std::{One, Zero};
 
 use crate::{Polymath, PolymathError, to_bytes, Transcript, VerifyingKey};
@@ -13,21 +13,16 @@ pub const MINUS_ALPHA: u64 = 3;
 /// `𝛾` is negative, we use it as an exponent of `y`: `y^𝛾 = (1/y)^(-𝛾)`
 pub const MINUS_GAMMA: u64 = 5;
 
-impl<E: Pairing, T, PCS> Polymath<E, T, PCS>
+impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
-    T: Transcript<Challenge = E::ScalarField>,
-    PCS: UnivariatePCS<
-        E::ScalarField,
-        Commitment = E::G1Affine,
-        EvalProof = E::G1Affine,
-        Transcript = T,
-    >,
+    T: Transcript<Challenge = F>,
+    PCS: UnivariatePCS<F, Transcript = T>,
 {
     pub(crate) fn compute_x1(
         t: &mut T,
-        public_inputs: &[E::ScalarField],
-        proof: &Proof<E>,
-    ) -> Result<E::ScalarField, PolymathError> {
+        public_inputs: &[F],
+        proof: &Proof<F, PCS>,
+    ) -> Result<F, PolymathError> {
         t.append_message(b"public_inputs", &to_bytes!(&public_inputs)?);
 
         t.append_message(b"proof.a_g1", &to_bytes!(&proof.a_g1)?);
@@ -37,26 +32,25 @@ where
     }
 
     /// y1 = x1^sigma
-    pub(crate) fn compute_y1(x1: E::ScalarField, sigma: u64) -> E::ScalarField {
+    pub(crate) fn compute_y1(x1: F, sigma: u64) -> F {
         x1.pow([sigma])
     }
 
     /// Compute `y^(exp)`, where exp is negative. `minus_exp` is thus positive.
-    pub(crate) fn neg_power(y: E::ScalarField, minus_exp: u64) -> E::ScalarField {
+    pub(crate) fn neg_power(y: F, minus_exp: u64) -> F {
         y.inverse().unwrap().pow([minus_exp])
     }
 
     pub(crate) fn compute_pi_at_x1(
-        vk: &VerifyingKey<E::ScalarField, PCS>,
-        public_inputs: &[E::ScalarField],
-        x1: E::ScalarField,
-        y1_gamma: E::ScalarField,
-    ) -> E::ScalarField {
-        let mut sum = E::ScalarField::zero();
+        vk: &VerifyingKey<F, PCS>,
+        public_inputs: &[F],
+        x1: F,
+        y1_gamma: F,
+    ) -> F {
+        let mut sum = F::zero();
 
-        let mut lagrange_k_j_at_x1_numerator =
-            (x1.pow([vk.m0]) - E::ScalarField::one()) / &E::ScalarField::from(vk.m0);
-        let mut nu_exp_j = E::ScalarField::one();
+        let mut lagrange_k_j_at_x1_numerator = (x1.pow([vk.m0]) - F::one()) / &F::from(vk.m0);
+        let mut nu_exp_j = F::one();
 
         for j in 0..vk.m0 {
             let lagrange_k_j_at_x1 = lagrange_k_j_at_x1_numerator / (x1 - nu_exp_j);
@@ -70,23 +64,23 @@ where
     }
 
     pub(crate) fn compute_c_at_x1(
-        vk: &VerifyingKey<E::ScalarField, PCS>,
-        x1: E::ScalarField,
-        y1_gamma: E::ScalarField,
-        y1_alpha: E::ScalarField,
-        a_at_x1: E::ScalarField,
-        pi_at_x1: E::ScalarField,
-    ) -> E::ScalarField {
+        vk: &VerifyingKey<F, PCS>,
+        x1: F,
+        y1_gamma: F,
+        y1_alpha: F,
+        a_at_x1: F,
+        pi_at_x1: F,
+    ) -> F {
         let z_h_no_k_at_x1 = Self::z_h_wo_k(vk, x1);
 
-        let m0 = E::ScalarField::from(vk.m0);
-        let n = E::ScalarField::from(vk.n);
+        let m0 = F::from(vk.m0);
+        let n = F::from(vk.n);
 
         ((a_at_x1 + y1_gamma) * a_at_x1 - pi_at_x1 * z_h_no_k_at_x1 * m0 / n) / y1_alpha
     }
 
-    fn z_tilde_j(public_inputs: &[E::ScalarField], j: u64) -> E::ScalarField {
-        let two = &E::ScalarField::from(2);
+    fn z_tilde_j(public_inputs: &[F], j: u64) -> F {
+        let two = &F::from(2);
         let j = j as usize;
         match j % 2 {
             0 => (public_inputs[j] + public_inputs[j + 1]) / two,
@@ -95,8 +89,8 @@ where
         }
     }
 
-    fn z_h_wo_k(vk: &VerifyingKey<E::ScalarField, PCS>, x1: E::ScalarField) -> E::ScalarField {
-        let one = E::ScalarField::one();
+    fn z_h_wo_k(vk: &VerifyingKey<F, PCS>, x1: F) -> F {
+        let one = F::one();
         (x1.pow([vk.n]) - one) / (x1.pow([vk.m0]) - one)
     }
 }
