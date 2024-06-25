@@ -3,8 +3,8 @@ use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem, OptimizationGoal};
 use ark_std::rand::RngCore;
 
-use crate::pcs::UnivariatePCS;
 use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
+use crate::pcs::UnivariatePCS;
 
 impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
@@ -32,9 +32,27 @@ where
         cs.finalize();
         end_timer!(lc_time);
 
-        end_timer!(prover_time);
-        todo!()
+        let prover = cs.borrow().unwrap();
+        let proof = Self::create_proof_with_assignment(
+            pk,
+            &prover.instance_assignment,
+            &prover.witness_assignment,
+        )?;
 
-        // Ok(proof)
+        end_timer!(prover_time);
+
+        Ok(proof)
+    }
+
+    fn create_proof_with_assignment(
+        pk: &ProvingKey<F, PCS>,
+        instance_assignment: &[F],
+        witness_assignment: &Vec<F>,
+    ) -> Result<Proof<F, PCS>, PolymathError>
+    where
+        PCS: UnivariatePCS<F, Transcript = T>,
+        T: Transcript<Challenge = F>,
+    {
+        todo!()
     }
 }
