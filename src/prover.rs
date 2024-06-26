@@ -1,5 +1,7 @@
 use ark_ff::PrimeField;
-use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem, OptimizationGoal};
+use ark_relations::r1cs::{
+    ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisMode,
+};
 use ark_std::rand::RngCore;
 
 use crate::pcs::UnivariatePCS;
@@ -20,6 +22,10 @@ where
 
         // Set the optimization goal
         cs.set_optimization_goal(OptimizationGoal::Constraints);
+        // Produce a witness, do not generate matrices
+        cs.set_mode(SynthesisMode::Prove {
+            construct_matrices: false,
+        });
 
         // Synthesize the circuit.
         let synthesis_time = start_timer!(|| "Constraint synthesis");
@@ -46,7 +52,7 @@ where
     fn create_proof_with_assignment(
         pk: &ProvingKey<F, PCS>,
         instance_assignment: &[F],
-        witness_assignment: &Vec<F>,
+        witness_assignment: &[F],
     ) -> Result<Proof<F, PCS>, PolymathError>
     where
         PCS: UnivariatePCS<F, Transcript = T>,

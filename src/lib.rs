@@ -70,6 +70,8 @@ where
         circuit: C,
         rng: &mut R,
     ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error> {
+        //let pk = Self::generate_proving_key(circuit, rng).map_err(|e| e.into())?;
+
         todo!();
         // let pk = Self::generate_random_parameters_with_reduction(circuit, rng)?;
         // let vk = pk.vk.clone();
