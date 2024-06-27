@@ -31,9 +31,6 @@ pub struct VerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
     /// `𝜔` - root of unity, element of the domain group: `X^n - 1 = 0`,
     /// `𝜔^(j·n) = 1`
     pub omega: F,
-    /// `𝜈 = 𝜔^(n/m₀)` - root of unity, element of the public input subdomain group: `X^m₀ - 1 = 0`,
-    /// `𝜈^(j·m₀) = 1`
-    pub nu: F,
 }
 
 // TODO embed PCSVerifying key instead of hardcoding its elements

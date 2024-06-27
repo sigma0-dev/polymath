@@ -48,34 +48,22 @@ where
     ) -> F {
         let mut sum = F::zero();
 
-        let mut lagrange_k_j_at_x1_numerator = (x1.pow([vk.m0]) - F::one()) / &F::from(vk.m0);
-        let mut nu_exp_j = F::one();
+        let mut lagrange_j_at_x1_numerator = (x1.pow([vk.n]) - F::one()) / &F::from(vk.n);
+        let mut omega_exp_j = F::one();
 
         for j in 0..vk.m0 {
-            let lagrange_k_j_at_x1 = lagrange_k_j_at_x1_numerator / (x1 - nu_exp_j);
+            let lagrange_k_j_at_x1 = lagrange_j_at_x1_numerator / (x1 - omega_exp_j);
             let to_add = Self::z_tilde_j(public_inputs, j) * lagrange_k_j_at_x1;
-            lagrange_k_j_at_x1_numerator *= vk.nu;
-            nu_exp_j *= vk.nu;
+            lagrange_j_at_x1_numerator *= vk.omega;
+            omega_exp_j *= vk.omega;
             sum += to_add;
         }
 
         sum * y1_gamma
     }
 
-    pub(crate) fn compute_c_at_x1(
-        vk: &VerifyingKey<F, PCS>,
-        x1: F,
-        y1_gamma: F,
-        y1_alpha: F,
-        a_at_x1: F,
-        pi_at_x1: F,
-    ) -> F {
-        let z_h_no_k_at_x1 = Self::z_h_wo_k(vk, x1);
-
-        let m0 = F::from(vk.m0);
-        let n = F::from(vk.n);
-
-        ((a_at_x1 + y1_gamma) * a_at_x1 - pi_at_x1 * z_h_no_k_at_x1 * m0 / n) / y1_alpha
+    pub(crate) fn compute_c_at_x1(y1_gamma: F, y1_alpha: F, a_at_x1: F, pi_at_x1: F) -> F {
+        ((a_at_x1 + y1_gamma) * a_at_x1 - pi_at_x1) / y1_alpha
     }
 
     fn z_tilde_j(public_inputs: &[F], j: u64) -> F {
@@ -86,10 +74,5 @@ where
             1 => public_inputs[j] - public_inputs[j - 1] / two,
             _ => unreachable!(),
         }
-    }
-
-    fn z_h_wo_k(vk: &VerifyingKey<F, PCS>, x1: F) -> F {
-        let one = F::one();
-        (x1.pow([vk.n]) - one) / (x1.pow([vk.m0]) - one)
     }
 }
