@@ -5,8 +5,8 @@ use ark_relations::r1cs::{
 };
 use ark_std::rand::RngCore;
 
-use crate::pcs::UnivariatePCS;
 use crate::{Polymath, ProvingKey, Transcript};
+use crate::pcs::UnivariatePCS;
 
 impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
@@ -38,18 +38,23 @@ where
 
         let domain_time = start_timer!(|| "Constructing evaluation domain");
 
-        let domain_size = cs.num_constraints();
+        let domain_size = (cs.num_constraints() + cs.num_instance_variables()) * 2;
         let domain = D::new(domain_size).ok_or(SynthesisError::PolynomialDegreeTooLarge)?;
 
         end_timer!(domain_time);
         ///////////////////////////////////////////////////////////////////////////
 
         let n = domain.size as i64;
+        let m0 = cs.num_instance_variables().next_power_of_two() as i64;
         let sigma = n + 3;
         let d_min = -5 * n - 15;
         let d_max = 5 * n + 7;
 
         let x: F = domain.sample_element_outside_domain(rng);
+
+        // TODO transform R1CS matrices A, B, C into SAP U and W
+
+        // TODO add PI copy constraints and pad U and W such that wⱼ(X) = 0 for j < m₀
 
         end_timer!(setup_time);
 
