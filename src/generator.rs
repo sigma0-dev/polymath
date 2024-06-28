@@ -6,8 +6,8 @@ use ark_relations::r1cs::{
 };
 use ark_std::rand::RngCore;
 
-use crate::{Polymath, ProvingKey, Transcript};
 use crate::pcs::UnivariatePCS;
+use crate::{Polymath, ProvingKey, Transcript};
 
 impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
