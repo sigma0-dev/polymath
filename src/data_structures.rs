@@ -1,8 +1,8 @@
 use ark_ff::{FftField, Field};
 use ark_poly::Radix2EvaluationDomain;
-use ark_relations::r1cs::Matrix;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
+use crate::generator::SAPMatrices;
 use crate::pcs::{HasPCSCommittingKey, HasPCSVerifyingKey, UnivariatePCS};
 
 /// Proof in the Polymath zkSNARK.
@@ -53,7 +53,7 @@ pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
     pub vk: VerifyingKey<F, PCS>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
     pub domain: Radix2EvaluationDomain<F>,
-    pub r1cs_matrices: (Matrix<F>, Matrix<F>, Matrix<F>),
+    pub sap_matrices: SAPMatrices<F>,
     pub u_polynomials: Vec<Vec<F>>,
     pub w_polynomials: Vec<Vec<F>>,
     pub x_powers_g1: Vec<PCS::Commitment>,

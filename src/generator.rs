@@ -1,9 +1,10 @@
 use ark_ff::{Field, PrimeField};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
-    ConstraintMatrices, ConstraintSynthesizer, ConstraintSystem, Matrix, OptimizationGoal,
-    SynthesisError, SynthesisMode,
+    ConstraintSynthesizer, ConstraintSystem, Matrix, OptimizationGoal, SynthesisError,
+    SynthesisMode,
 };
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::RngCore;
 
 use crate::pcs::UnivariatePCS;
@@ -38,8 +39,14 @@ where
 
         ///////////////////////////////////////////////////////////////////////////
 
+        let r1cs_matrices = cs.to_matrices().unwrap();
         let sap_matrices = SAPMatrices {
-            r1cs_matrices: cs.to_matrices().unwrap(),
+            num_instance_variables: r1cs_matrices.num_instance_variables,
+            num_witness_variables: r1cs_matrices.num_witness_variables,
+            num_constraints: r1cs_matrices.num_constraints,
+            a: r1cs_matrices.a,
+            b: r1cs_matrices.b,
+            c: r1cs_matrices.c,
         };
 
         ///////////////////////////////////////////////////////////////////////////
@@ -77,11 +84,7 @@ where
                 omega: domain.group_gen(),
             },
             domain,
-            r1cs_matrices: (
-                sap_matrices.r1cs_matrices.a,
-                sap_matrices.r1cs_matrices.b,
-                sap_matrices.r1cs_matrices.c,
-            ),
+            sap_matrices,
             u_polynomials,
             w_polynomials,
             x_powers_g1: vec![],
@@ -111,8 +114,15 @@ where
     }
 }
 
+#[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub(crate) struct SAPMatrices<F: Field> {
-    r1cs_matrices: ConstraintMatrices<F>,
+    pub num_instance_variables: usize,
+    pub num_witness_variables: usize,
+    pub num_constraints: usize,
+
+    pub a: Vec<Vec<(F, usize)>>,
+    pub b: Vec<Vec<(F, usize)>>,
+    pub c: Vec<Vec<(F, usize)>>,
 }
 
 impl<F: Field> SAPMatrices<F> {
@@ -123,8 +133,6 @@ impl<F: Field> SAPMatrices<F> {
     }
 
     fn u(&self, i: usize, j: usize) -> F {
-        let matrices = &self.r1cs_matrices;
-
         let (m0, m, n) = self.m0_m_n();
         let (double_m0, double_m0_plus_n, double_m0_plus_double_n, m0_plus_m) =
             Self::inner_size_bounds(m0, m, n);
@@ -150,19 +158,17 @@ impl<F: Field> SAPMatrices<F> {
 
             (i, j) if i < double_m0_plus_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0, j - m0);
-                m_at(&matrices.a, i, j) + m_at(&matrices.b, i, j)
+                m_at(&self.a, i, j) + m_at(&self.b, i, j)
             }
             (i, j) if i < double_m0_plus_double_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0_plus_n, j - m0);
-                m_at(&matrices.a, i, j) - m_at(&matrices.b, i, j)
+                m_at(&self.a, i, j) - m_at(&self.b, i, j)
             }
             (_, _) => zero,
         }
     }
 
     fn w(&self, i: usize, j: usize) -> F {
-        let matrices = &self.r1cs_matrices;
-
         let (m0, m, n) = self.m0_m_n();
         let (double_m0, double_m0_plus_n, double_m0_plus_double_n, m0_plus_m) =
             Self::inner_size_bounds(m0, m, n);
@@ -184,7 +190,7 @@ impl<F: Field> SAPMatrices<F> {
 
             (i, j) if i < double_m0_plus_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0, j - m0);
-                m_at(&matrices.c, i, j) * four
+                m_at(&self.c, i, j) * four
             }
 
             (i, j) if i < double_m0_plus_n && j == i + m => one,
@@ -210,11 +216,9 @@ impl<F: Field> SAPMatrices<F> {
     }
 
     fn m0_m_n(&self) -> (usize, usize, usize) {
-        let matrices = &self.r1cs_matrices;
-
-        let m0 = matrices.num_instance_variables;
-        let m = m0 + matrices.num_witness_variables; // full witness size (public + private)
-        let n = matrices.num_constraints;
+        let m0 = self.num_instance_variables;
+        let m = m0 + self.num_witness_variables; // full witness size (public + private)
+        let n = self.num_constraints;
         (m0, m, n)
     }
 }
