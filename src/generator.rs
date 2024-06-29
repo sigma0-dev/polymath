@@ -56,7 +56,7 @@ where
         let u_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.u(i, j));
         let w_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.w(i, j));
 
-        let n = domain.size as i64; // a power of 2
+        let n = domain.size; // a power of 2
         let sigma = n + 3;
         // let d_min = -5 * n - 15;
         // let d_max = 5 * n + 7;
@@ -71,11 +71,17 @@ where
             pcs_ck,
             vk: VerifyingKey {
                 pcs_vk,
-                n: n as u64,
+                n,
                 m0: cs.num_instance_variables() as u64,
-                sigma: sigma as u64,
+                sigma,
                 omega: domain.group_gen(),
             },
+            domain,
+            r1cs_matrices: (
+                sap_matrices.r1cs_matrices.a,
+                sap_matrices.r1cs_matrices.b,
+                sap_matrices.r1cs_matrices.c,
+            ),
             u_polynomials,
             w_polynomials,
             x_powers_g1: vec![],
@@ -105,7 +111,7 @@ where
     }
 }
 
-struct SAPMatrices<F: Field> {
+pub(crate) struct SAPMatrices<F: Field> {
     r1cs_matrices: ConstraintMatrices<F>,
 }
 

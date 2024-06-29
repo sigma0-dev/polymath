@@ -1,4 +1,6 @@
-use ark_ff::Field;
+use ark_ff::{FftField, Field};
+use ark_poly::Radix2EvaluationDomain;
+use ark_relations::r1cs::Matrix;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
 use crate::pcs::{HasPCSCommittingKey, HasPCSVerifyingKey, UnivariatePCS};
@@ -45,11 +47,13 @@ impl<F: Field, PCS: UnivariatePCS<F>> HasPCSVerifyingKey<F, PCS> for VerifyingKe
 
 /// Proving key for the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<F: Field, PCS: UnivariatePCS<F>> {
+pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
     pub pcs_ck: PCS::CommittingKey,
     /// The underlying verification key.
     pub vk: VerifyingKey<F, PCS>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
+    pub domain: Radix2EvaluationDomain<F>,
+    pub r1cs_matrices: (Matrix<F>, Matrix<F>, Matrix<F>),
     pub u_polynomials: Vec<Vec<F>>,
     pub w_polynomials: Vec<Vec<F>>,
     pub x_powers_g1: Vec<PCS::Commitment>,
@@ -62,7 +66,7 @@ pub struct ProvingKey<F: Field, PCS: UnivariatePCS<F>> {
 
 // TODO embed PCSCommittingKey key instead of hardcoding its elements
 
-impl<F: Field, PCS: UnivariatePCS<F>> HasPCSCommittingKey<F, PCS> for ProvingKey<F, PCS> {
+impl<F: FftField, PCS: UnivariatePCS<F>> HasPCSCommittingKey<F, PCS> for ProvingKey<F, PCS> {
     fn get_pcs_ck(&self) -> &PCS::CommittingKey {
         &self.pcs_ck
     }
