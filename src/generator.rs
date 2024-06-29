@@ -7,7 +7,7 @@ use ark_relations::r1cs::{
 use ark_std::rand::RngCore;
 
 use crate::pcs::UnivariatePCS;
-use crate::{Polymath, ProvingKey, Transcript};
+use crate::{Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -19,7 +19,7 @@ where
     pub(crate) fn generate_proving_key<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
         rng: &mut R,
-    ) -> Result<ProvingKey<F, PCS>, SynthesisError> {
+    ) -> Result<ProvingKey<F, PCS>, PolymathError> {
         let setup_time = start_timer!(|| "Polymath::Generator");
         ///////////////////////////////////////////////////////////////////////////
 
@@ -58,14 +58,30 @@ where
 
         let n = domain.size as i64; // a power of 2
         let sigma = n + 3;
-        let d_min = -5 * n - 15;
-        let d_max = 5 * n + 7;
+        // let d_min = -5 * n - 15;
+        // let d_max = 5 * n + 7;
 
         let x: F = domain.sample_element_outside_domain(rng);
 
+        let (pcs_ck, pcs_vk) = PCS::setup(domain.size(), rng)?;
+
         end_timer!(setup_time);
 
-        todo!()
+        Ok(ProvingKey {
+            pcs_ck,
+            vk: VerifyingKey {
+                pcs_vk,
+                n: n as u64,
+                m0: cs.num_instance_variables() as u64,
+                sigma: sigma as u64,
+                omega: domain.group_gen(),
+            },
+            u_polynomials,
+            w_polynomials,
+            x_powers_g1: vec![],
+            x_powers_y_alpha_g1: vec![],
+            uw_j_lcs_by_y_alpha_g1: vec![],
+        })
     }
 
     fn polynomials<D: EvaluationDomain<F>, M: Fn(usize, usize) -> F>(
@@ -113,11 +129,14 @@ impl<F: Field> SAPMatrices<F> {
         let two = one + one;
 
         match (i, j) {
-            (0, 0) => two,                                       // (A₀+1)₀₀=2
-            (i, 0) if i < m0 => one,                             // (A₀+1)ᵢ₀=1
-            (i, j) if i < m0 && j == i => one,                   // (A₀+1)ᵢⱼ=1
-            (i, 0) if i == m0 => zero,                           // (A₀-1)₀₀=0
-            (i, 0) if i < double_m0 => one,                      // (A₀-1)ᵢ₀=1
+            (0, 0) => two,                     // (A₀+1)₀₀=2
+            (i, 0) if i < m0 => one,           // (A₀+1)ᵢ₀=1
+            (i, j) if i < m0 && j == i => one, // (A₀+1)ᵢⱼ=1
+
+            (i, _) if i < m0 => zero,
+
+            (i, 0) if i == m0 => zero,      // (A₀-1)₀₀=0
+            (i, 0) if i < double_m0 => one, // (A₀-1)ᵢ₀=1
             (i, j) if i < double_m0 && j == i - m0 => minus_one, // (A₀-1)ᵢⱼ=-1
 
             (i, _) if i < double_m0 => zero,

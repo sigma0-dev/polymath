@@ -50,6 +50,8 @@ pub struct ProvingKey<F: Field, PCS: UnivariatePCS<F>> {
     /// The underlying verification key.
     pub vk: VerifyingKey<F, PCS>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
+    pub u_polynomials: Vec<Vec<F>>,
+    pub w_polynomials: Vec<Vec<F>>,
     pub x_powers_g1: Vec<PCS::Commitment>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.
     pub x_powers_y_alpha_g1: Vec<PCS::Commitment>,
