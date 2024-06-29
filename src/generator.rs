@@ -9,6 +9,8 @@ use ark_std::rand::RngCore;
 use crate::pcs::UnivariatePCS;
 use crate::{Polymath, ProvingKey, Transcript};
 
+type D<F> = Radix2EvaluationDomain<F>;
+
 impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
     T: Transcript<Challenge = F>,
@@ -18,8 +20,6 @@ where
         circuit: C,
         rng: &mut R,
     ) -> Result<ProvingKey<F, PCS>, SynthesisError> {
-        type D<F> = Radix2EvaluationDomain<F>;
-
         let setup_time = start_timer!(|| "Polymath::Generator");
         ///////////////////////////////////////////////////////////////////////////
 
@@ -47,13 +47,16 @@ where
         let domain_time = start_timer!(|| "Constructing evaluation domain");
 
         let (n, m) = sap_matrices.size();
-        let num_constraints = n;
+        let num_constraints = n; // unaligned to powers of 2
         let domain = D::new(num_constraints).ok_or(SynthesisError::PolynomialDegreeTooLarge)?;
 
         end_timer!(domain_time);
         ///////////////////////////////////////////////////////////////////////////
 
-        let n = domain.size as i64;
+        let u_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.u(i, j));
+        let w_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.w(i, j));
+
+        let n = domain.size as i64; // a power of 2
         let sigma = n + 3;
         let d_min = -5 * n - 15;
         let d_max = 5 * n + 7;
@@ -65,8 +68,24 @@ where
         todo!()
     }
 
-    fn transform_matrices(matrices: ConstraintMatrices<F>, m0: usize) -> (Matrix<F>, Matrix<F>) {
-        todo!()
+    fn polynomials<D: EvaluationDomain<F>, M: Fn(usize, usize) -> F>(
+        domain: &D,
+        m: usize,
+        m_ij: M,
+    ) -> Vec<Vec<F>> {
+        (0..m)
+            .map(|j| Self::poly_coeff_vec(domain, j, &m_ij))
+            .collect()
+    }
+
+    fn poly_coeff_vec<D: EvaluationDomain<F>, M: Fn(usize, usize) -> F>(
+        domain: &D,
+        j: usize,
+        m: &M,
+    ) -> Vec<F> {
+        let mut poly_def = (0..domain.size()).map(|i| m(i as usize, j)).collect(); // poly evals
+        domain.ifft_in_place(&mut poly_def); // make coeffs from evals
+        poly_def
     }
 }
 
