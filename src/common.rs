@@ -1,4 +1,5 @@
 use ark_ff::PrimeField;
+use ark_std::iterable::Iterable;
 use ark_std::{One, Zero};
 
 use crate::pcs::UnivariatePCS;
@@ -48,14 +49,16 @@ where
     ) -> F {
         let mut sum = F::zero();
 
-        let mut lagrange_j_at_x1_numerator = (x1.pow([vk.n]) - F::one()) / &F::from(vk.n);
-        let mut omega_exp_j = F::one();
+        let mut lagrange_i_at_x1_numerator = (x1.pow([vk.n]) - F::one()) / &F::from(vk.n);
+        let mut omega_exp_i = F::one();
 
-        for j in 0..vk.m0 {
-            let lagrange_k_j_at_x1 = lagrange_j_at_x1_numerator / (x1 - omega_exp_j);
-            let to_add = Self::z_tilde_j(public_inputs, j) * lagrange_k_j_at_x1;
-            lagrange_j_at_x1_numerator *= vk.omega;
-            omega_exp_j *= vk.omega;
+        let m0 = public_inputs.len();
+
+        for i in 0..m0 * 2 {
+            let lagrange_k_i_at_x1 = lagrange_i_at_x1_numerator / (x1 - omega_exp_i);
+            let to_add = Self::z_tilde_i(public_inputs, i) * lagrange_k_i_at_x1;
+            lagrange_i_at_x1_numerator *= vk.omega;
+            omega_exp_i *= vk.omega;
             sum += to_add;
         }
 
@@ -66,13 +69,25 @@ where
         ((a_at_x1 + y1_gamma) * a_at_x1 - pi_at_x1) / y1_alpha
     }
 
-    fn z_tilde_j(public_inputs: &[F], j: u64) -> F {
-        let two = &F::from(2);
-        let j = j as usize;
-        match j % 2 {
-            0 => (public_inputs[j] + public_inputs[j + 1]) / two,
-            1 => public_inputs[j] - public_inputs[j - 1] / two,
-            _ => unreachable!(),
+    fn z_tilde_i(public_inputs: &[F], i: usize) -> F {
+        let m0 = public_inputs.len();
+        let one = F::one();
+
+        match i {
+            0 => one + one,
+
+            i if i < m0 => {
+                let j = i;
+                one + public_inputs[j]
+            }
+
+            i if i == m0 => F::zero(),
+
+            i => {
+                // i > m0
+                let j = i - m0;
+                one - public_inputs[j]
+            }
         }
     }
 }
