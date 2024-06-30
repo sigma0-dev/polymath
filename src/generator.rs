@@ -1,14 +1,13 @@
 use ark_ff::{Field, PrimeField};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
-    ConstraintSynthesizer, ConstraintSystem, Matrix, OptimizationGoal, SynthesisError,
-    SynthesisMode,
+    ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::RngCore;
 
 use crate::pcs::UnivariatePCS;
-use crate::{Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
+use crate::{common, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -43,7 +42,7 @@ where
         let sap_matrices = SAPMatrices {
             num_instance_variables: r1cs_matrices.num_instance_variables,
             num_witness_variables: r1cs_matrices.num_witness_variables,
-            num_constraints: r1cs_matrices.num_constraints,
+            num_r1cs_constraints: r1cs_matrices.num_constraints,
             a: r1cs_matrices.a,
             b: r1cs_matrices.b,
             c: r1cs_matrices.c,
@@ -53,7 +52,7 @@ where
 
         let domain_time = start_timer!(|| "Constructing evaluation domain");
 
-        let (n, m) = sap_matrices.size();
+        let (n, m) = sap_matrices.size(); // (rows, columns) in U and W matrices
         let num_constraints = n; // unaligned to powers of 2
         let domain = D::new(num_constraints).ok_or(SynthesisError::PolynomialDegreeTooLarge)?;
 
@@ -108,7 +107,7 @@ where
         j: usize,
         m: &M,
     ) -> Vec<F> {
-        let mut poly_def = (0..domain.size()).map(|i| m(i as usize, j)).collect(); // poly evals
+        let mut poly_def = (0..domain.size()).map(|i| m(i, j)).collect(); // poly evals
         domain.ifft_in_place(&mut poly_def); // make coeffs from evals
         poly_def
     }
@@ -118,7 +117,7 @@ where
 pub(crate) struct SAPMatrices<F: Field> {
     pub num_instance_variables: usize,
     pub num_witness_variables: usize,
-    pub num_constraints: usize,
+    pub num_r1cs_constraints: usize,
 
     pub a: Vec<Vec<(F, usize)>>,
     pub b: Vec<Vec<(F, usize)>>,
@@ -158,11 +157,11 @@ impl<F: Field> SAPMatrices<F> {
 
             (i, j) if i < double_m0_plus_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0, j - m0);
-                m_at(&self.a, i, j) + m_at(&self.b, i, j)
+                common::m_at(&self.a, i, j) + common::m_at(&self.b, i, j)
             }
             (i, j) if i < double_m0_plus_double_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0_plus_n, j - m0);
-                m_at(&self.a, i, j) - m_at(&self.b, i, j)
+                common::m_at(&self.a, i, j) - common::m_at(&self.b, i, j)
             }
             (_, _) => zero,
         }
@@ -190,11 +189,11 @@ impl<F: Field> SAPMatrices<F> {
 
             (i, j) if i < double_m0_plus_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0, j - m0);
-                m_at(&self.c, i, j) * four
+                common::m_at(&self.c, i, j) * four
             }
 
             (i, j) if i < double_m0_plus_n && j == i + m => one,
-            (i, j) if i < double_m0_plus_n => zero,
+            (i, _) if i < double_m0_plus_n => zero,
 
             (i, j) if i < double_m0_plus_double_n && j == i - n + m => one,
 
@@ -217,15 +216,8 @@ impl<F: Field> SAPMatrices<F> {
 
     fn m0_m_n(&self) -> (usize, usize, usize) {
         let m0 = self.num_instance_variables;
-        let m = m0 + self.num_witness_variables; // full witness size (public + private)
-        let n = self.num_constraints;
+        let m = m0 + self.num_witness_variables; // full R1CS witness size (public + private)
+        let n = self.num_r1cs_constraints;
         (m0, m, n)
     }
-}
-
-fn m_at<F: Field>(m: &Matrix<F>, i: usize, j: usize) -> F {
-    m[i].iter()
-        .find(|(v, index)| *index == j)
-        .unwrap_or(&(F::zero(), 0))
-        .0
 }

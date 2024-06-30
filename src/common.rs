@@ -1,4 +1,5 @@
-use ark_ff::PrimeField;
+use ark_ff::{Field, PrimeField};
+use ark_relations::r1cs::Matrix;
 use ark_std::iterable::Iterable;
 use ark_std::{One, Zero};
 
@@ -90,4 +91,11 @@ where
             }
         }
     }
+}
+
+pub(crate) fn m_at<F: Field>(m: &Matrix<F>, i: usize, j: usize) -> F {
+    m[i].iter()
+        .find(|(v, index)| *index == j)
+        .unwrap_or(&(F::zero(), 0))
+        .0
 }
