@@ -2,7 +2,7 @@ use std::ops::Neg;
 
 use ark_ff::PrimeField;
 use ark_poly::univariate::DensePolynomial;
-use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
+use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
@@ -97,7 +97,7 @@ where
         let numerator_poly = u2_poly + w_poly.neg();
         let (h_poly, rem_poly) = numerator_poly.divide_by_vanishing_poly(domain).unwrap();
 
-        assert!(!h_poly.is_zero());
+        assert!(!h_poly.is_zero() && h_poly.degree() <= domain.size() - 2);
         assert!(rem_poly.is_zero());
 
         todo!()
