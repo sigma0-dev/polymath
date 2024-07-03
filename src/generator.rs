@@ -224,3 +224,27 @@ impl<F: Field> SAPMatrices<F> {
         (m0, m, n)
     }
 }
+
+// mod test {
+//     use ark_bls12_381::{Bls12_381, Fr};
+//     use ark_poly::univariate::DensePolynomial;
+//     use proptest::prelude::*;
+//
+//     use crate::FieldChallengeTranscript;
+//     use crate::pcs::KZG;
+//
+//     use super::*;
+//
+//     type Polymath = crate::Polymath<
+//         Fr,
+//         FieldChallengeTranscript<Fr>,
+//         KZG<Bls12_381, DensePolynomial<Fr>, FieldChallengeTranscript<Fr>>,
+//     >;
+//
+//     proptest! {
+//         #[test]
+//         fn doesnt_crash(s in "\\PC*") {
+//             // parse_date(&s);
+//         }
+//     }
+// }

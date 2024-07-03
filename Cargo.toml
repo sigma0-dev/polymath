@@ -37,6 +37,7 @@ ark-bls12-381 = { version = "0.4.0", default-features = false, features = ["curv
 #ark-mnt4-753 = { version = "0.4.0", default-features = false, features = ["r1cs", "curve"] }
 #ark-mnt6-753 = { version = "0.4.0", default-features = false, features = ["r1cs"] }
 ark-r1cs-std = { version = "0.4.0", default-features = false }
+proptest = { version = "1.0.0" }
 
 [features]
 default = ["parallel"]
