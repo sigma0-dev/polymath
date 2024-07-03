@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use ark_ec::pairing::Pairing;
+use ark_ec::AffineRepr;
 use ark_ff::Field;
 use ark_poly::Polynomial;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError};
@@ -107,7 +108,16 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
         max_degree: usize,
         rng: &mut R,
     ) -> Result<(Self::CommittingKey, Self::VerifyingKey), PCSError> {
-        todo!()
+        Ok((
+            KZGCommittingKey {
+                _e: Default::default(), // TODO return the actual committing key
+            },
+            KZGVerifyingKey {
+                one_g1: E::G1Affine::generator(),
+                one_g2: E::G2Affine::generator(),
+                x_g2: E::G2Affine::generator(), // TODO mul by the toxic waste secret
+            },
+        ))
     }
 
     fn commit(

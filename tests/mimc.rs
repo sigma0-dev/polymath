@@ -23,9 +23,9 @@ use ark_relations::{
     lc, ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError, Variable},
 };
+use ark_std::{test_rng, One};
 // For randomness (during paramgen and proof generation)
 use ark_std::rand::{Rng, RngCore, SeedableRng};
-use ark_std::test_rng;
 
 use sigma0_polymath::pcs::KZG;
 use sigma0_polymath::transcript::FieldChallengeTranscript;

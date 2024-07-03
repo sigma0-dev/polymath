@@ -41,7 +41,7 @@ where
         let r1cs_matrices = cs.to_matrices().unwrap();
         let sap_matrices = SAPMatrices {
             num_instance_variables: r1cs_matrices.num_instance_variables,
-            num_witness_variables: r1cs_matrices.num_witness_variables,
+            num_r1cs_witness_variables: r1cs_matrices.num_witness_variables,
             num_r1cs_constraints: r1cs_matrices.num_constraints,
             a: r1cs_matrices.a,
             b: r1cs_matrices.b,
@@ -59,8 +59,8 @@ where
         end_timer!(domain_time);
         ///////////////////////////////////////////////////////////////////////////
 
-        let u_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.u(i, j));
-        let w_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.w(i, j));
+        let u_j_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.u(i, j));
+        let w_j_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.w(i, j));
 
         let n = domain.size; // a power of 2
         let sigma = n + 3;
@@ -82,10 +82,10 @@ where
                 sigma,
                 omega: domain.group_gen(),
             },
-            domain,
             sap_matrices,
-            u_polynomials,
-            w_polynomials,
+            u_j_polynomials,
+            w_j_polynomials,
+            // TODO generate G₁ elements
             x_powers_g1: vec![],
             x_powers_y_alpha_g1: vec![],
             uw_j_lcs_by_y_alpha_g1: vec![],
@@ -114,9 +114,9 @@ where
 }
 
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub(crate) struct SAPMatrices<F: Field> {
+pub struct SAPMatrices<F: Field> {
     pub num_instance_variables: usize,
-    pub num_witness_variables: usize,
+    pub num_r1cs_witness_variables: usize,
     pub num_r1cs_constraints: usize,
 
     pub a: Vec<Vec<(F, usize)>>,
@@ -125,13 +125,14 @@ pub(crate) struct SAPMatrices<F: Field> {
 }
 
 impl<F: Field> SAPMatrices<F> {
-    fn size(&self) -> (usize, usize) {
+    /// Number of rows and columns in SAP matrices.
+    pub fn size(&self) -> (usize, usize) {
         let (m0, m, n) = self.m0_m_n();
 
         ((m0 + n) * 2, m0 * 2 + m + n)
     }
 
-    fn u(&self, i: usize, j: usize) -> F {
+    pub fn u(&self, i: usize, j: usize) -> F {
         let (m0, m, n) = self.m0_m_n();
         let (double_m0, double_m0_plus_n, double_m0_plus_double_n, m0_plus_m) =
             Self::inner_size_bounds(m0, m, n);
@@ -167,7 +168,7 @@ impl<F: Field> SAPMatrices<F> {
         }
     }
 
-    fn w(&self, i: usize, j: usize) -> F {
+    pub fn w(&self, i: usize, j: usize) -> F {
         let (m0, m, n) = self.m0_m_n();
         let (double_m0, double_m0_plus_n, double_m0_plus_double_n, m0_plus_m) =
             Self::inner_size_bounds(m0, m, n);
@@ -201,6 +202,7 @@ impl<F: Field> SAPMatrices<F> {
         }
     }
 
+    #[inline]
     fn inner_size_bounds(m0: usize, m: usize, n: usize) -> (usize, usize, usize, usize) {
         let double_m0 = m0 + m0;
         let double_m0_plus_n = double_m0 + n;
@@ -214,9 +216,10 @@ impl<F: Field> SAPMatrices<F> {
         )
     }
 
+    #[inline]
     fn m0_m_n(&self) -> (usize, usize, usize) {
         let m0 = self.num_instance_variables;
-        let m = m0 + self.num_witness_variables; // full R1CS witness size (public + private)
+        let m = m0 + self.num_r1cs_witness_variables; // full R1CS witness size (public + private)
         let n = self.num_r1cs_constraints;
         (m0, m, n)
     }

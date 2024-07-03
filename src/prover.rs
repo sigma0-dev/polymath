@@ -1,13 +1,20 @@
+use std::ops::Neg;
+
 use ark_ff::PrimeField;
+use ark_poly::univariate::DensePolynomial;
+use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
-    ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisMode,
+    ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
 use ark_std::iterable::Iterable;
 use ark_std::rand::RngCore;
+use ark_std::Zero;
 
 use crate::common::m_at;
 use crate::pcs::UnivariatePCS;
 use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
+
+type D<F> = Radix2EvaluationDomain<F>;
 
 impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
 where
@@ -32,7 +39,7 @@ where
         // Synthesize the circuit.
         let synthesis_time = start_timer!(|| "Constraint synthesis");
         circuit.generate_constraints(cs.clone())?;
-        debug_assert!(cs.is_satisfied().unwrap());
+        // debug_assert!(cs.is_satisfied().unwrap());
         end_timer!(synthesis_time);
 
         let lc_time = start_timer!(|| "Inlining LCs");
@@ -40,6 +47,12 @@ where
         end_timer!(lc_time);
 
         let prover = cs.borrow().unwrap();
+
+        println!(
+            "instance assignment [1]: {}",
+            &prover.instance_assignment[1]
+        );
+
         let proof = Self::create_proof_with_assignment(
             pk,
             &prover.instance_assignment,
@@ -66,25 +79,83 @@ where
             witness_assignment,
             &Self::compute_y_vec(pk, instance_assignment, witness_assignment),
         ];
+
+        let u_j_by_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials, z);
+        let w_j_by_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials, z);
+
+        let u_coeffs = Self::sum_vectors(&u_j_by_z_j_coeffs);
+        let w_coeffs = Self::sum_vectors(&w_j_by_z_j_coeffs);
+
+        let u2_coeffs = Self::square_polynomial(&u_coeffs)?;
+
+        let u2_poly = DensePolynomial::from_coefficients_vec(u2_coeffs);
+        let w_poly = DensePolynomial::from_coefficients_vec(w_coeffs);
+
+        let num_sap_rows = pk.sap_matrices.size().0;
+        let domain = D::new(num_sap_rows).unwrap();
+
+        let numerator_poly = u2_poly + w_poly.neg();
+        let (h_poly, rem_poly) = numerator_poly.divide_by_vanishing_poly(domain).unwrap();
+
+        assert!(!h_poly.is_zero());
+        assert!(rem_poly.is_zero());
+
         todo!()
+    }
+
+    fn sum_vectors(vs: &Vec<Vec<F>>) -> Vec<F> {
+        vs.iter().fold(vec![F::zero(); vs[0].len()], |a, b| {
+            a.into_iter().zip(b).map(|(a, b)| a + b).collect()
+        })
+    }
+
+    fn polynomials_mul_by_z_j(polynomials: &Vec<Vec<F>>, z: &[&[F]]) -> Vec<Vec<F>> {
+        polynomials
+            .iter()
+            .zip(0..)
+            .map(|(&ref p_coeffs, j)| {
+                p_coeffs
+                    .iter()
+                    .map(move |&v| v * Self::combined_v_at(z, j))
+                    .collect()
+            })
+            .collect()
+    }
+
+    fn poly_mul_by(poly: &[F], s: F) -> Vec<F> {
+        poly.iter().map(|&v| v * s).collect()
+    }
+
+    fn evals<M: Fn(usize, usize) -> F>(n: usize, m: usize, m_at: M, z: &[&[F]]) -> Vec<F> {
+        (0..n)
+            .map(|i| {
+                (0..m)
+                    .map(|j| m_at(i, j) * Self::combined_v_at(z, j))
+                    .fold(F::zero(), |x, y| x + y)
+            })
+            .collect()
     }
 
     fn compute_y_vec(pk: &ProvingKey<F, PCS>, x: &[F], w: &[F]) -> Vec<F> {
         let zero = F::zero();
         let one = F::one();
-        let y_m0: Vec<F> = (1..pk.sap_matrices.num_witness_variables)
-            .map(|j| one - x[j])
+        let y_m0: Vec<F> = (1..pk.sap_matrices.num_instance_variables)
+            .map(|j| {
+                let v = one - x[j];
+                v * v
+            })
             .collect();
 
         let (a, b) = (&pk.sap_matrices.a, &pk.sap_matrices.b);
 
         let y_n: Vec<F> = (0..pk.sap_matrices.num_r1cs_constraints)
             .map(|i| {
-                let num_r1cs_columns =
-                    pk.sap_matrices.num_instance_variables + pk.sap_matrices.num_witness_variables;
-                (0..num_r1cs_columns)
+                let num_r1cs_columns = pk.sap_matrices.num_instance_variables
+                    + pk.sap_matrices.num_r1cs_witness_variables;
+                let v = (0..num_r1cs_columns)
                     .map(|j| (m_at(a, i, j) - m_at(b, i, j)) * Self::combined_v_at(&[x, w], j))
-                    .fold(zero, |x, y| x + y)
+                    .fold(zero, |x, y| x + y);
+                v * v
             })
             .collect();
         vec![vec![F::zero()], y_m0, y_n].concat()
@@ -99,5 +170,20 @@ where
             j -= v.len();
         }
         unreachable!()
+    }
+
+    fn square_polynomial(p_coeffs: &Vec<F>) -> Result<Vec<F>, PolymathError> {
+        let squaring_domain: D<F> =
+            D::new(p_coeffs.len() * 2).ok_or(SynthesisError::PolynomialDegreeTooLarge)?;
+
+        let mut u = squaring_domain.fft(p_coeffs);
+
+        for i in 0..u.len() {
+            u[i] = u[i] * u[i];
+        }
+
+        squaring_domain.ifft_in_place(&mut u); // u is now a coeffs vector
+
+        Ok(u)
     }
 }

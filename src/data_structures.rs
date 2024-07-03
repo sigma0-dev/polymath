@@ -1,5 +1,4 @@
 use ark_ff::{FftField, Field};
-use ark_poly::Radix2EvaluationDomain;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
 use crate::generator::SAPMatrices;
@@ -51,11 +50,10 @@ pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
     pub pcs_ck: PCS::CommittingKey,
     /// The underlying verification key.
     pub vk: VerifyingKey<F, PCS>,
-    /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
-    pub domain: Radix2EvaluationDomain<F>,
     pub sap_matrices: SAPMatrices<F>,
-    pub u_polynomials: Vec<Vec<F>>,
-    pub w_polynomials: Vec<Vec<F>>,
+    pub u_j_polynomials: Vec<Vec<F>>,
+    pub w_j_polynomials: Vec<Vec<F>>,
+    /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
     pub x_powers_g1: Vec<PCS::Commitment>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.
     pub x_powers_y_alpha_g1: Vec<PCS::Commitment>,
