@@ -2,8 +2,8 @@ use std::ops::Neg;
 
 use ark_ec::{ScalarMul, VariableBaseMSM};
 use ark_ff::PrimeField;
-use ark_poly::univariate::DensePolynomial;
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
+use ark_poly::univariate::DensePolynomial;
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
@@ -11,9 +11,9 @@ use ark_std::iterable::Iterable;
 use ark_std::rand::RngCore;
 use ark_std::Zero;
 
+use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 use crate::common::m_at;
 use crate::pcs::UnivariatePCS;
-use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -212,21 +212,28 @@ where
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
     ) -> PCS::Commitment {
-        // TODO refactor into a function taking the poly and powers of g1
-        let (gs, cs): (Vec<_>, Vec<_>) = u_poly
+        let u_g1 = Self::compute_in_g1(u_poly, &pk.x_powers_g1);
+
+        u_g1
+    }
+
+    fn compute_in_g1(
+        poly: &DensePolynomial<F>,
+        g1_powers: &Vec<<PCS as UnivariatePCS<F>>::Commitment>,
+    ) -> <PCS as UnivariatePCS<F>>::Commitment {
+        let (gs, cs): (Vec<_>, Vec<_>) = poly
             .coeffs
             .iter()
             .zip(0..)
             .filter_map(|(&coeff, i)| match coeff.is_zero() {
                 true => None,
                 false => Some((
-                    <PCS::Commitment as ScalarMul>::MulBase::from(pk.x_powers_g1[i]),
+                    <PCS::Commitment as ScalarMul>::MulBase::from(g1_powers[i]),
                     coeff,
                 )),
             })
             .unzip();
         let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());
-
         u_g1
     }
 }
