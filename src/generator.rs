@@ -6,8 +6,8 @@ use ark_relations::r1cs::{
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::RngCore;
 
-use crate::{common, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
 use crate::pcs::UnivariatePCS;
+use crate::{common, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
