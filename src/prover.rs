@@ -11,7 +11,7 @@ use ark_std::iterable::Iterable;
 use ark_std::rand::RngCore;
 use ark_std::Zero;
 
-use crate::common::m_at;
+use crate::common::{m_at, B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
 use crate::pcs::UnivariatePCS;
 use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
@@ -118,9 +118,29 @@ where
 
         let c_g1 = z_j_mul_u_j_w_j_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1;
 
-        let a_at_x1 = todo!();
+        let mut t = T::new(B_POLYMATH);
+        let x1 = Self::compute_x1(&mut t, instance_assignment, &a_g1, &c_g1)?;
+
+        let y1 = Self::compute_y1(x1, pk.vk.sigma);
+
+        let y1_alpha = Self::neg_power(y1, MINUS_ALPHA);
+
+        let a_at_x1 = u_poly.evaluate(&x1) + r_a_poly.evaluate(&x1) * y1_alpha;
+
+        let y1_gamma = Self::neg_power(y1, MINUS_GAMMA);
+        let pi_at_x1 = Self::compute_pi_at_x1(&pk.vk, instance_assignment, x1, y1_gamma);
+
+        // compute c_at_x1
+        let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, a_at_x1, pi_at_x1);
+
+        // TODO compute a_poly: depends on Y^𝛼
+        // let a_poly = SparsePolynomial::from(u_poly)
+        //     + SparsePolynomial::from(r_a_poly) * SparsePolynomial::from_coefficients_slice(&[()]);
 
         let d_g1 = todo!();
+
+        // let d_g1 =
+        //     PCS::batch_eval_single_point(pk.pcs_ck, &[a_poly, c_poly], x1, &[a_at_x1, c_at_x1])?;
 
         Ok(Proof {
             a_g1,

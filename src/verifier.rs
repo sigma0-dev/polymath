@@ -1,6 +1,6 @@
 use ark_ff::PrimeField;
 
-use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
+use crate::common::{B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
 use crate::pcs::{HasPCSVerifyingKey, UnivariatePCS};
 use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 
@@ -18,10 +18,10 @@ where
         proof: &Proof<F, PCS>,
         public_inputs: &[F],
     ) -> Result<bool, PolymathError> {
-        let mut t = T::new(b"polymath");
+        let mut t = T::new(B_POLYMATH);
 
         // compute challenge x1
-        let x1: F = Self::compute_x1(&mut t, public_inputs, proof)?;
+        let x1: F = Self::compute_x1(&mut t, public_inputs, &proof.a_g1, &proof.c_g1)?;
         // compute y1=x1^sigma
         let y1: F = Self::compute_y1(x1, vk.sigma);
 

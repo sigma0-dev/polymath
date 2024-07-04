@@ -6,7 +6,7 @@ use ark_std::{One, Zero};
 use crate::pcs::UnivariatePCS;
 use crate::{to_bytes, Polymath, PolymathError, Transcript, VerifyingKey};
 
-use super::Proof;
+pub const B_POLYMATH: &'static [u8; 8] = b"polymath";
 
 /// `𝛼` is negative, we use it as an exponent of `y`: `y^𝛼 = (1/y)^(-𝛼)`
 pub const MINUS_ALPHA: u64 = 3;
@@ -22,12 +22,13 @@ where
     pub(crate) fn compute_x1(
         t: &mut T,
         public_inputs: &[F],
-        proof: &Proof<F, PCS>,
+        a_g1: &PCS::Commitment,
+        c_g1: &PCS::Commitment,
     ) -> Result<F, PolymathError> {
         t.append_message(b"public_inputs", &to_bytes!(&public_inputs)?);
 
-        t.append_message(b"proof.a_g1", &to_bytes!(&proof.a_g1)?);
-        t.append_message(b"proof.c_g1", &to_bytes!(&proof.c_g1)?);
+        t.append_message(b"proof.a_g1", &to_bytes!(a_g1)?);
+        t.append_message(b"proof.c_g1", &to_bytes!(c_g1)?);
 
         Ok(t.challenge(b"x1"))
     }
