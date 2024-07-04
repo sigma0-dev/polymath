@@ -111,6 +111,10 @@ where
 
         let r_g1 = Self::compute_r_g1(pk, &u_poly, &r_a_poly);
 
+        let h_zh_by_y_alpha_g1 = Self::compute_in_g1(&h_poly, &pk.x_powers_zh_by_y_alpha_g1);
+
+        // let z_j_mul_u_j_w_j_lcs_by_y_alpha = Self::compute_in_g1();
+
         let c_g1 = todo!();
 
         let a_at_x1 = todo!();

@@ -89,6 +89,7 @@ where
             x_powers_g1: vec![],
             x_powers_y_alpha_g1: vec![],
             x_powers_y_gamma_g1: vec![],
+            x_powers_zh_by_y_alpha_g1: vec![],
             uw_j_lcs_by_y_alpha_g1: vec![],
         })
     }
