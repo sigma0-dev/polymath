@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use ark_ec::pairing::Pairing;
-use ark_ec::AffineRepr;
+use ark_ec::{AffineRepr, PrimeGroup, ScalarMul, VariableBaseMSM};
 use ark_ff::Field;
 use ark_poly::Polynomial;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError};
@@ -26,8 +26,24 @@ pub trait HasPCSVerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
 // `: Clone` bound is needed by Polymath to implement SNARK associated types (that are all `: Clone`)
 pub trait UnivariatePCS<F: Field>: Clone {
     type Polynomial: Polynomial<F>;
-    type Commitment: Clone + Copy + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
-    type EvalProof: Clone + Copy + Eq + Debug + CanonicalSerialize + CanonicalDeserialize;
+    type Commitment: Clone
+        + Copy
+        + Eq
+        + PrimeGroup<ScalarField = F>
+        + ScalarMul
+        + VariableBaseMSM
+        + Debug
+        + CanonicalSerialize
+        + CanonicalDeserialize;
+    type EvalProof: Clone
+        + Copy
+        + Eq
+        + PrimeGroup<ScalarField = F>
+        + ScalarMul
+        + VariableBaseMSM
+        + Debug
+        + CanonicalSerialize
+        + CanonicalDeserialize;
     type CommittingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
     type VerifyingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
     type Transcript: Transcript<Challenge = F>;
@@ -98,8 +114,8 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
     UnivariatePCS<E::ScalarField> for KZG<E, P, T>
 {
     type Polynomial = P;
-    type Commitment = E::G1Affine;
-    type EvalProof = E::G1Affine;
+    type Commitment = E::G1;
+    type EvalProof = E::G1;
     type CommittingKey = KZGCommittingKey<E>;
     type VerifyingKey = KZGVerifyingKey<E>;
     type Transcript = T;

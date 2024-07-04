@@ -1,5 +1,6 @@
 use std::ops::Neg;
 
+use ark_ec::{ScalarMul, VariableBaseMSM};
 use ark_ff::PrimeField;
 use ark_poly::univariate::DensePolynomial;
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
@@ -57,6 +58,7 @@ where
             pk,
             &prover.instance_assignment,
             &prover.witness_assignment,
+            rng,
         )?;
 
         end_timer!(prover_time);
@@ -64,10 +66,11 @@ where
         Ok(proof)
     }
 
-    fn create_proof_with_assignment(
+    fn create_proof_with_assignment<R: RngCore>(
         pk: &ProvingKey<F, PCS>,
         instance_assignment: &[F],
         witness_assignment: &[F],
+        rng: &mut R,
     ) -> Result<Proof<F, PCS>, PolymathError>
     where
         PCS: UnivariatePCS<F, Transcript = T>,
@@ -88,6 +91,7 @@ where
 
         let u2_coeffs = Self::square_polynomial(&u_coeffs)?;
 
+        let u_poly = DensePolynomial::from_coefficients_vec(u_coeffs);
         let u2_poly = DensePolynomial::from_coefficients_vec(u2_coeffs);
         let w_poly = DensePolynomial::from_coefficients_vec(w_coeffs);
 
@@ -100,7 +104,23 @@ where
         assert!(!h_poly.is_zero() && h_poly.degree() <= domain.size() - 2);
         assert!(rem_poly.is_zero());
 
-        todo!()
+        let r_a_poly = DensePolynomial::from_coefficients_vec(vec![F::rand(rng), F::rand(rng)]);
+        assert!(r_a_poly.degree() <= 1);
+
+        let a_g1 = Self::compute_a_g1(pk, &u_poly, &r_a_poly);
+
+        let c_g1 = todo!();
+
+        let a_at_x1 = todo!();
+
+        let d_g1 = todo!();
+
+        Ok(Proof {
+            a_g1,
+            c_g1,
+            a_at_x1,
+            d_g1,
+        })
     }
 
     fn sum_vectors(vs: &Vec<Vec<F>>) -> Vec<F> {
@@ -185,5 +205,28 @@ where
         squaring_domain.ifft_in_place(&mut u); // u is now a coeffs vector
 
         Ok(u)
+    }
+
+    fn compute_a_g1(
+        pk: &ProvingKey<F, PCS>,
+        u_poly: &DensePolynomial<F>,
+        r_a_poly: &DensePolynomial<F>,
+    ) -> PCS::Commitment {
+        // TODO refactor into a function taking the poly and powers of g1
+        let (gs, cs): (Vec<_>, Vec<_>) = u_poly
+            .coeffs
+            .iter()
+            .zip(0..)
+            .filter_map(|(&coeff, i)| match coeff.is_zero() {
+                true => None,
+                false => Some((
+                    <PCS::Commitment as ScalarMul>::MulBase::from(pk.x_powers_g1[i]),
+                    coeff,
+                )),
+            })
+            .unzip();
+        let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());
+
+        u_g1
     }
 }
