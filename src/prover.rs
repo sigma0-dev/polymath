@@ -113,9 +113,10 @@ where
 
         let h_zh_by_y_alpha_g1 = Self::msm(&h_poly.coeffs, &pk.x_powers_zh_by_y_alpha_g1);
 
-        // let z_j_mul_u_j_w_j_lcs_by_y_alpha = Self::compute_in_g1();
+        let z_j_mul_u_j_w_j_lcs_by_y_alpha_g1 =
+            Self::msm(&witness_assignment.to_vec(), &pk.uw_j_lcs_by_y_alpha_g1);
 
-        let c_g1 = todo!();
+        let c_g1 = z_j_mul_u_j_w_j_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1;
 
         let a_at_x1 = todo!();
 
