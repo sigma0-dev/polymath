@@ -2,8 +2,8 @@ use std::ops::Neg;
 
 use ark_ec::{ScalarMul, VariableBaseMSM};
 use ark_ff::PrimeField;
-use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
 use ark_poly::univariate::DensePolynomial;
+use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
@@ -11,9 +11,9 @@ use ark_std::iterable::Iterable;
 use ark_std::rand::RngCore;
 use ark_std::Zero;
 
-use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 use crate::common::m_at;
 use crate::pcs::UnivariatePCS;
+use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -213,8 +213,8 @@ where
         r_a_poly: &DensePolynomial<F>,
     ) -> PCS::Commitment {
         let u_g1 = Self::compute_in_g1(u_poly, &pk.x_powers_g1);
-
-        u_g1
+        let r_a_y_alpha_g1 = Self::compute_in_g1(r_a_poly, &pk.x_powers_y_alpha_g1);
+        u_g1 + r_a_y_alpha_g1
     }
 
     fn compute_in_g1(
