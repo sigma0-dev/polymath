@@ -57,6 +57,8 @@ pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
     pub x_powers_g1: Vec<PCS::Commitment>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.
     pub x_powers_y_alpha_g1: Vec<PCS::Commitment>,
+    /// `[(xⁱ·y^𝛾)ᵢ]₁` - powers of `x` multiplied by `y^𝛾` in `G1`.
+    pub x_powers_y_gamma_g1: Vec<PCS::Commitment>,
     /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ]₁` - linear combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1`.
     pub uw_j_lcs_by_y_alpha_g1: Vec<PCS::Commitment>,
     // TODO there's more

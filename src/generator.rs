@@ -6,8 +6,8 @@ use ark_relations::r1cs::{
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::RngCore;
 
-use crate::pcs::UnivariatePCS;
 use crate::{common, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
+use crate::pcs::UnivariatePCS;
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -88,6 +88,7 @@ where
             // TODO generate G₁ elements
             x_powers_g1: vec![],
             x_powers_y_alpha_g1: vec![],
+            x_powers_y_gamma_g1: vec![],
             uw_j_lcs_by_y_alpha_g1: vec![],
         })
     }

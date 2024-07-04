@@ -1,9 +1,9 @@
-use std::ops::Neg;
+use std::ops::{Mul, Neg};
 
 use ark_ec::{ScalarMul, VariableBaseMSM};
 use ark_ff::PrimeField;
-use ark_poly::univariate::DensePolynomial;
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
+use ark_poly::univariate::DensePolynomial;
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
@@ -11,9 +11,9 @@ use ark_std::iterable::Iterable;
 use ark_std::rand::RngCore;
 use ark_std::Zero;
 
+use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 use crate::common::m_at;
 use crate::pcs::UnivariatePCS;
-use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -108,6 +108,8 @@ where
         assert!(r_a_poly.degree() <= 1);
 
         let a_g1 = Self::compute_a_g1(pk, &u_poly, &r_a_poly);
+
+        let r_g1 = Self::compute_r_g1(pk, &u_poly, &r_a_poly);
 
         let c_g1 = todo!();
 
@@ -217,10 +219,29 @@ where
         u_g1 + r_a_y_alpha_g1
     }
 
+    fn compute_r_g1(
+        pk: &ProvingKey<F, PCS>,
+        u_poly: &DensePolynomial<F>,
+        r_a_poly: &DensePolynomial<F>,
+    ) -> PCS::Commitment {
+        let two = F::one() + F::one();
+
+        // r_a is degree 1, so naive mul is cheaper than via FFTs
+        let two_r_a_by_u_poly = u_poly.naive_mul(r_a_poly).mul(two);
+        let two_r_a_by_u_g1 = Self::compute_in_g1(&two_r_a_by_u_poly, &pk.x_powers_g1);
+
+        let r_a_square_poly = r_a_poly.naive_mul(r_a_poly);
+        let r_a_square_y_alpha_g1 = Self::compute_in_g1(&r_a_square_poly, &pk.x_powers_y_alpha_g1);
+
+        let r_a_y_gamma_g1 = Self::compute_in_g1(r_a_poly, &pk.x_powers_y_gamma_g1);
+
+        two_r_a_by_u_g1 + r_a_square_y_alpha_g1 + r_a_y_gamma_g1
+    }
+
     fn compute_in_g1(
         poly: &DensePolynomial<F>,
-        g1_powers: &Vec<<PCS as UnivariatePCS<F>>::Commitment>,
-    ) -> <PCS as UnivariatePCS<F>>::Commitment {
+        g1_monomials: &Vec<PCS::Commitment>,
+    ) -> PCS::Commitment {
         let (gs, cs): (Vec<_>, Vec<_>) = poly
             .coeffs
             .iter()
@@ -228,7 +249,7 @@ where
             .filter_map(|(&coeff, i)| match coeff.is_zero() {
                 true => None,
                 false => Some((
-                    <PCS::Commitment as ScalarMul>::MulBase::from(g1_powers[i]),
+                    <PCS::Commitment as ScalarMul>::MulBase::from(g1_monomials[i]),
                     coeff,
                 )),
             })
