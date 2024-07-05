@@ -1,5 +1,8 @@
+use std::fmt::Debug;
+use std::hash::Hash;
+
 use ark_ff::{FftField, Field};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Valid};
 
 use crate::generator::SAPMatrices;
 use crate::pcs::{HasPCSCommittingKey, HasPCSVerifyingKey, UnivariatePCS};
