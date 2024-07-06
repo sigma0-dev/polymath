@@ -2,7 +2,7 @@ use std::ops::{Mul, Neg};
 
 use ark_ec::{ScalarMul, VariableBaseMSM};
 use ark_ff::PrimeField;
-use ark_poly::univariate::DensePolynomial;
+use ark_poly::univariate::{DensePolynomial, SparsePolynomial};
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
@@ -133,9 +133,21 @@ where
         // compute c_at_x1
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, a_at_x1, pi_at_x1);
 
-        // TODO compute a_poly: depends on Y^𝛼
-        // let a_poly = SparsePolynomial::from(u_poly)
-        //     + SparsePolynomial::from(r_a_poly) * SparsePolynomial::from_coefficients_slice(&[()]);
+        // compute batch commitment
+
+        let n = domain.size;
+
+        let u_x_by_y_gamma_poly = Self::mul_by_x_power(
+            &SparsePolynomial::from(u_poly),
+            (MINUS_GAMMA * (n + pk.vk.sigma)) as usize,
+        );
+        let r_a_mul_y_alpha_by_y_gamma_poly = Self::mul_by_x_power(
+            &SparsePolynomial::from(r_a_poly),
+            ((MINUS_GAMMA - MINUS_ALPHA) * (n + pk.vk.sigma)) as usize,
+        );
+        let a_x_by_y_gamma_poly = u_x_by_y_gamma_poly + r_a_mul_y_alpha_by_y_gamma_poly;
+
+        // TODO compute c_x_by_y_gamma_poly
 
         let d_g1 = todo!();
 
@@ -148,6 +160,14 @@ where
             a_at_x1,
             d_g1,
         })
+    }
+
+    fn mul_by_x_power(poly: &SparsePolynomial<F>, power_of_x: usize) -> SparsePolynomial<F> {
+        SparsePolynomial::from_coefficients_vec(
+            poly.iter()
+                .map(|(i, c)| (i + power_of_x, c.clone()))
+                .collect(),
+        )
     }
 
     fn sum_vectors(vs: &Vec<Vec<F>>) -> Vec<F> {
