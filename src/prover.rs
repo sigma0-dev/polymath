@@ -149,10 +149,10 @@ where
 
         // TODO compute c_x_by_y_gamma_poly
 
-        let d_g1 = todo!();
+        // TODO compute D(X) = H(X)·(Y^𝛾)
+        // TODO compute [D(X)]₁
 
-        // let d_g1 =
-        //     PCS::batch_eval_single_point(pk.pcs_ck, &[a_poly, c_poly], x1, &[a_at_x1, c_at_x1])?;
+        let d_g1 = todo!();
 
         Ok(Proof {
             a_g1,
