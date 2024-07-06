@@ -137,15 +137,19 @@ where
 
         let n = domain.size;
 
-        let u_x_by_y_gamma_poly = Self::mul_by_x_power(
-            &SparsePolynomial::from(u_poly),
-            (MINUS_GAMMA * (n + pk.vk.sigma)) as usize,
-        );
+        let u_poly = SparsePolynomial::from(u_poly);
+        let r_a_poly = SparsePolynomial::from(r_a_poly);
+
+        let u_x_by_y_gamma_poly =
+            Self::mul_by_x_power(&u_poly, (MINUS_GAMMA * (n + pk.vk.sigma)) as usize);
+
         let r_a_mul_y_alpha_by_y_gamma_poly = Self::mul_by_x_power(
-            &SparsePolynomial::from(r_a_poly),
+            &r_a_poly,
             ((MINUS_GAMMA - MINUS_ALPHA) * (n + pk.vk.sigma)) as usize,
         );
         let a_x_by_y_gamma_poly = u_x_by_y_gamma_poly + r_a_mul_y_alpha_by_y_gamma_poly;
+
+        let r_x_by_y_gamma_poly = Self::compute_r_x_by_y_gamma_poly(pk, &u_poly, r_a_poly);
 
         // TODO compute c_x_by_y_gamma_poly
 
@@ -281,6 +285,28 @@ where
         let r_a_y_gamma_g1 = Self::msm(&r_a_poly.coeffs, &pk.x_powers_y_gamma_g1);
 
         two_r_a_by_u_g1 + r_a_square_y_alpha_g1 + r_a_y_gamma_g1
+    }
+
+    fn compute_r_x_by_y_gamma_poly(
+        pk: &ProvingKey<F, PCS>,
+        u_poly: &SparsePolynomial<F>,
+        r_a_poly: SparsePolynomial<F>,
+    ) -> SparsePolynomial<F> {
+        let two = F::one() + F::one();
+
+        let two_r_a_mul_u_poly = Mul::mul(&u_poly.mul(&r_a_poly), two);
+        let two_r_a_mul_u_by_y_gamma_poly = Self::mul_by_x_power(
+            &two_r_a_mul_u_poly,
+            (MINUS_GAMMA * (pk.vk.n + pk.vk.sigma)) as usize,
+        );
+
+        let r_a_square_poly = r_a_poly.mul(&r_a_poly);
+        let r_a_square_by_y_gamma_minus_alpha_poly = Self::mul_by_x_power(
+            &r_a_square_poly,
+            ((MINUS_GAMMA - MINUS_ALPHA) * (pk.vk.n + pk.vk.sigma)) as usize,
+        );
+
+        two_r_a_mul_u_by_y_gamma_poly + r_a_square_by_y_gamma_minus_alpha_poly + r_a_poly
     }
 
     fn msm(scalars: &Vec<F>, g1_elems: &Vec<PCS::Commitment>) -> PCS::Commitment {
