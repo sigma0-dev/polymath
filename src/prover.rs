@@ -83,11 +83,11 @@ where
             &Self::compute_y_vec(pk, instance_assignment, witness_assignment),
         ];
 
-        let u_j_by_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials, z);
-        let w_j_by_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials, z);
+        let u_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials, z);
+        let w_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials, z);
 
-        let u_coeffs = Self::sum_vectors(&u_j_by_z_j_coeffs);
-        let w_coeffs = Self::sum_vectors(&w_j_by_z_j_coeffs);
+        let u_coeffs = Self::sum_vectors(&u_j_x_z_j_coeffs);
+        let w_coeffs = Self::sum_vectors(&w_j_x_z_j_coeffs);
 
         let u2_coeffs = Self::square_polynomial(&u_coeffs)?;
 
@@ -98,8 +98,8 @@ where
         let num_sap_rows = pk.sap_matrices.size().0;
         let domain = D::new(num_sap_rows).unwrap();
 
-        let numerator_poly = u2_poly + w_poly.neg();
-        let (h_poly, rem_poly) = numerator_poly.divide_by_vanishing_poly(domain).unwrap();
+        let h_numerator_poly = u2_poly + w_poly.neg();
+        let (h_poly, rem_poly) = h_numerator_poly.divide_by_vanishing_poly(domain).unwrap();
 
         assert!(!h_poly.is_zero() && h_poly.degree() <= domain.size() - 2);
         assert!(rem_poly.is_zero());
@@ -151,7 +151,33 @@ where
 
         let r_x_by_y_gamma_poly = Self::compute_r_x_by_y_gamma_poly(pk, &u_poly, r_a_poly);
 
-        // TODO compute c_x_by_y_gamma_poly
+        let m0 = instance_assignment.len();
+        let u_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials[m0..], &z[1..]);
+        let w_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials[m0..], &z[1..]);
+
+        let witness_u_x_poly =
+            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&u_j_x_z_j_coeffs));
+        let witness_w_x_poly =
+            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&w_j_x_z_j_coeffs));
+
+        let witness_u_x_by_y_alpha_poly = Self::mul_by_x_power(
+            &SparsePolynomial::from(witness_u_x_poly),
+            ((n + pk.vk.sigma) * MINUS_ALPHA) as usize,
+        );
+        let witness_w_x_by_y_alpha_y_gamma_poly = Self::mul_by_x_power(
+            &SparsePolynomial::from(witness_w_x_poly),
+            ((n + pk.vk.sigma) * (MINUS_ALPHA + MINUS_GAMMA)) as usize,
+        );
+
+        let h_x_zh_x_by_y_alpha_y_gamma_poly = Self::mul_by_x_power(
+            &SparsePolynomial::from(h_numerator_poly),
+            ((n + pk.vk.sigma) * (MINUS_ALPHA + MINUS_GAMMA)) as usize,
+        );
+
+        let c_x_by_y_gamma_poly = witness_u_x_by_y_alpha_poly
+            + witness_w_x_by_y_alpha_y_gamma_poly
+            + h_x_zh_x_by_y_alpha_y_gamma_poly
+            + r_x_by_y_gamma_poly;
 
         // TODO compute D(X) = H(X)·(Y^𝛾)
         // TODO compute [D(X)]₁
@@ -180,7 +206,7 @@ where
         })
     }
 
-    fn polynomials_mul_by_z_j(polynomials: &Vec<Vec<F>>, z: &[&[F]]) -> Vec<Vec<F>> {
+    fn polynomials_mul_by_z_j(polynomials: &[Vec<F>], z: &[&[F]]) -> Vec<Vec<F>> {
         polynomials
             .iter()
             .zip(0..)
