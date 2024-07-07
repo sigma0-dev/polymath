@@ -179,6 +179,8 @@ where
             + h_x_zh_x_by_y_alpha_y_gamma_poly
             + r_x_by_y_gamma_poly;
 
+        // TODO compute H(X) = (A(X)·(Y^-𝛾) + x₂·C(X)·(Y^-𝛾)) - (A(x₁)·(Y^-𝛾) - x₂·C(x₁)·(Y^-𝛾))/(X - x₁)
+
         // TODO compute D(X) = H(X)·(Y^𝛾)
         // TODO compute [D(X)]₁
 
