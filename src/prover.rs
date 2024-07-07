@@ -141,13 +141,13 @@ where
         let r_a_poly = SparsePolynomial::from(r_a_poly);
 
         let u_x_by_y_gamma_poly =
-            Self::mul_by_x_power(&u_poly, (MINUS_GAMMA * (n + pk.vk.sigma)) as usize);
+            Self::mul_by_x_power(&u_poly, ((n + pk.vk.sigma) * MINUS_GAMMA) as usize);
 
-        let r_a_mul_y_alpha_by_y_gamma_poly = Self::mul_by_x_power(
+        let r_a_x_y_alpha_by_y_gamma_poly = Self::mul_by_x_power(
             &r_a_poly,
-            ((MINUS_GAMMA - MINUS_ALPHA) * (n + pk.vk.sigma)) as usize,
+            ((n + pk.vk.sigma) * (MINUS_GAMMA - MINUS_ALPHA)) as usize,
         );
-        let a_x_by_y_gamma_poly = u_x_by_y_gamma_poly + r_a_mul_y_alpha_by_y_gamma_poly;
+        let a_x_by_y_gamma_poly = u_x_by_y_gamma_poly + r_a_x_y_alpha_by_y_gamma_poly;
 
         let r_x_by_y_gamma_poly = Self::compute_r_x_by_y_gamma_poly(pk, &u_poly, r_a_poly);
 
@@ -294,19 +294,19 @@ where
     ) -> SparsePolynomial<F> {
         let two = F::one() + F::one();
 
-        let two_r_a_mul_u_poly = Mul::mul(&u_poly.mul(&r_a_poly), two);
-        let two_r_a_mul_u_by_y_gamma_poly = Self::mul_by_x_power(
-            &two_r_a_mul_u_poly,
-            (MINUS_GAMMA * (pk.vk.n + pk.vk.sigma)) as usize,
+        let two_r_a_x_u_poly = &u_poly.mul(&r_a_poly) * two;
+        let two_r_a_x_u_by_y_gamma_poly = Self::mul_by_x_power(
+            &two_r_a_x_u_poly,
+            ((pk.vk.n + pk.vk.sigma) * MINUS_GAMMA) as usize,
         );
 
         let r_a_square_poly = r_a_poly.mul(&r_a_poly);
         let r_a_square_by_y_gamma_minus_alpha_poly = Self::mul_by_x_power(
             &r_a_square_poly,
-            ((MINUS_GAMMA - MINUS_ALPHA) * (pk.vk.n + pk.vk.sigma)) as usize,
+            ((pk.vk.n + pk.vk.sigma) * (MINUS_GAMMA - MINUS_ALPHA)) as usize,
         );
 
-        two_r_a_mul_u_by_y_gamma_poly + r_a_square_by_y_gamma_minus_alpha_poly + r_a_poly
+        two_r_a_x_u_by_y_gamma_poly + r_a_square_by_y_gamma_minus_alpha_poly + r_a_poly
     }
 
     fn msm(scalars: &Vec<F>, g1_elems: &Vec<PCS::Commitment>) -> PCS::Commitment {
