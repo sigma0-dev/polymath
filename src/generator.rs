@@ -1,6 +1,7 @@
 use ark_ec::PrimeGroup;
 use ark_ff::{Field, PrimeField};
-use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
+use ark_poly::univariate::DensePolynomial;
+use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
@@ -66,14 +67,14 @@ where
         let w_j_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.w(i, j));
 
         let n = domain.size(); // a power of 2
+        let m0 = cs.num_instance_variables();
         let bnd_a: usize = 1;
         let sigma = n + 3;
-        // let d_min = -5 * n - 15;
-        // let d_max = 5 * n + 7;
 
         let x: F = domain.sample_element_outside_domain(rng);
         let y: F = x.pow(&[sigma as u64]);
         let y_alpha = y.inverse().unwrap().pow(&[MINUS_ALPHA]);
+        let y_to_minus_alpha = y.pow(&[MINUS_ALPHA]);
         let y_gamma = y.inverse().unwrap().pow(&[MINUS_GAMMA]);
         let z: F = domain.sample_element_outside_domain(rng);
 
@@ -88,8 +89,15 @@ where
             |j| x.pow(&[j]) * y_gamma * z,
         );
 
-        let x_powers_zh_by_y_alpha_g1 = vec![];
-        let uw_j_lcs_by_y_alpha_g1 = vec![];
+        let x_powers_zh_by_y_alpha_g1 = Self::generate_in_g1(n - 2, |j| {
+            x.pow(&[j]) * domain.evaluate_vanishing_polynomial(x) * y_to_minus_alpha
+        });
+
+        let uw_j_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0, |j| {
+            let u_j_poly = DensePolynomial::from_coefficients_slice(&u_j_polynomials[j as usize]);
+            let w_j_poly = DensePolynomial::from_coefficients_slice(&w_j_polynomials[j as usize]);
+            (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
+        });
 
         let (pcs_ck, pcs_vk) = PCS::setup(domain.size(), rng)?;
 
@@ -99,7 +107,7 @@ where
             vk: VerifyingKey {
                 pcs_vk,
                 n: n as u64,
-                m0: cs.num_instance_variables() as u64,
+                m0: m0 as u64,
                 sigma: sigma as u64,
                 omega: domain.group_gen(),
             },
