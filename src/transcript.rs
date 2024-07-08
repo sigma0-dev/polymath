@@ -32,6 +32,7 @@ pub trait Transcript: Send + Clone {
 
 #[derive(Clone)]
 pub struct FieldChallengeTranscript<F: Field> {
+    merlin: merlin::Transcript,
     _f: PhantomData<F>,
 }
 
@@ -39,7 +40,10 @@ impl<F: Field> Transcript for FieldChallengeTranscript<F> {
     type Challenge = F;
 
     fn new(name: &'static [u8]) -> Self {
-        todo!()
+        Self {
+            merlin: merlin::Transcript::new(name),
+            _f: Default::default(),
+        }
     }
 
     fn domain_separate(&mut self, label: &'static [u8]) {
@@ -47,11 +51,17 @@ impl<F: Field> Transcript for FieldChallengeTranscript<F> {
     }
 
     fn append_message<M: AsRef<[u8]>>(&mut self, label: &'static [u8], message: M) {
-        todo!()
+        self.merlin.append_message(label, message.as_ref());
     }
 
     fn challenge(&mut self, label: &'static [u8]) -> Self::Challenge {
-        todo!()
+        let mut r = None;
+        while r.is_none() {
+            let mut buf = [0; 64];
+            self.merlin.challenge_bytes(label, &mut buf);
+            r = F::from_random_bytes(buf.as_ref());
+        }
+        r.unwrap()
     }
 
     fn rng_seed(&mut self, label: &'static [u8]) -> [u8; 32] {
