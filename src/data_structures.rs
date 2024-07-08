@@ -5,7 +5,7 @@ use ark_ff::{FftField, Field};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Valid};
 
 use crate::generator::SAPMatrices;
-use crate::pcs::{HasPCSCommittingKey, HasPCSVerifyingKey, UnivariatePCS};
+use crate::pcs::{HasPCSVerifyingKey, UnivariatePCS};
 
 /// Proof in the Polymath zkSNARK.
 #[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
@@ -50,7 +50,6 @@ impl<F: Field, PCS: UnivariatePCS<F>> HasPCSVerifyingKey<F, PCS> for VerifyingKe
 /// Proving key for the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
-    pub pcs_ck: PCS::CommittingKey,
     /// The underlying verification key.
     pub vk: VerifyingKey<F, PCS>,
     pub sap_matrices: SAPMatrices<F>,
@@ -69,12 +68,4 @@ pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
     /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ| j = i + m₀, i ∈ [0, m-m₀)]₁` - linear combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1` for indices of the witness vector.
     pub uw_j_lcs_by_y_alpha_g1: Vec<PCS::Commitment>,
     // TODO there's more
-}
-
-// TODO embed PCSCommittingKey key instead of hardcoding its elements
-
-impl<F: FftField, PCS: UnivariatePCS<F>> HasPCSCommittingKey<F, PCS> for ProvingKey<F, PCS> {
-    fn get_pcs_ck(&self) -> &PCS::CommittingKey {
-        &self.pcs_ck
-    }
 }

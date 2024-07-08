@@ -192,7 +192,7 @@ where
         let c_at_x1_by_y_gamma_poly = &y_to_minus_gamma_poly * c_at_x1;
 
         // TODO get rid of conversion back and forth - divide sparse poly directly
-        let (h_x_poly, rem_poly) = DenseOrSparsePolynomial::from(
+        let (d_x_by_y_gamma_poly, rem_poly) = DenseOrSparsePolynomial::from(
             a_x_by_y_gamma_poly
                 + &c_x_by_y_gamma_poly * x2
                 + -a_at_x1_by_y_gamma_poly
@@ -203,10 +203,14 @@ where
         ))
         .unwrap();
         assert!(rem_poly.is_zero());
+        assert!(
+            d_x_by_y_gamma_poly.degree()
+                <= 2 * (n as usize - 1) + (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize
+        );
 
-        // compute [d]₁ = [D(X)·z] = [H(X)·(Y^𝛾)·z]₁
+        // compute [d]₁ = [D(X)·z] = [(D(X)·(Y^-𝛾))·(Y^𝛾)·z]₁
 
-        let d_g1 = Self::msm(&h_x_poly.coeffs, &pk.x_powers_y_gamma_z_g1);
+        let d_g1 = Self::msm(&d_x_by_y_gamma_poly.coeffs, &pk.x_powers_y_gamma_z_g1);
 
         Ok(Proof {
             a_g1,

@@ -1,3 +1,4 @@
+use ark_ec::PrimeGroup;
 use ark_ff::{Field, PrimeField};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
@@ -5,7 +6,9 @@ use ark_relations::r1cs::{
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::RngCore;
+use ark_std::Zero;
 
+use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
 use crate::pcs::UnivariatePCS;
 use crate::{common, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
 
@@ -62,37 +65,61 @@ where
         let u_j_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.u(i, j));
         let w_j_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.w(i, j));
 
-        let n = domain.size; // a power of 2
+        let n = domain.size(); // a power of 2
+        let bnd_a: usize = 1;
         let sigma = n + 3;
         // let d_min = -5 * n - 15;
         // let d_max = 5 * n + 7;
 
         let x: F = domain.sample_element_outside_domain(rng);
+        let y: F = x.pow(&[sigma as u64]);
+        let y_alpha = y.inverse().unwrap().pow(&[MINUS_ALPHA]);
+        let y_gamma = y.inverse().unwrap().pow(&[MINUS_GAMMA]);
+        let z: F = domain.sample_element_outside_domain(rng);
+
+        let x_powers_g1 = Self::generate_in_g1(n + bnd_a, |j| x.pow(&[j]));
+
+        let x_powers_y_alpha_g1 = Self::generate_in_g1(2 * bnd_a + 1, |j| x.pow(&[j]) * y_alpha);
+
+        let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a + 1, |j| x.pow(&[j]) * y_gamma);
+
+        let x_powers_y_gamma_z_g1 = Self::generate_in_g1(
+            2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize) + 1,
+            |j| x.pow(&[j]) * y_gamma * z,
+        );
+
+        let x_powers_zh_by_y_alpha_g1 = vec![];
+        let uw_j_lcs_by_y_alpha_g1 = vec![];
 
         let (pcs_ck, pcs_vk) = PCS::setup(domain.size(), rng)?;
 
         end_timer!(setup_time);
 
         Ok(ProvingKey {
-            pcs_ck,
             vk: VerifyingKey {
                 pcs_vk,
-                n,
+                n: n as u64,
                 m0: cs.num_instance_variables() as u64,
-                sigma,
+                sigma: sigma as u64,
                 omega: domain.group_gen(),
             },
             sap_matrices,
             u_j_polynomials,
             w_j_polynomials,
-            // TODO generate G₁ elements
-            x_powers_g1: vec![],
-            x_powers_y_alpha_g1: vec![],
-            x_powers_y_gamma_g1: vec![],
-            x_powers_y_gamma_z_g1: vec![],
-            x_powers_zh_by_y_alpha_g1: vec![],
-            uw_j_lcs_by_y_alpha_g1: vec![],
+
+            x_powers_g1,
+            x_powers_y_alpha_g1,
+            x_powers_y_gamma_g1,
+            x_powers_y_gamma_z_g1,
+            x_powers_zh_by_y_alpha_g1,
+            uw_j_lcs_by_y_alpha_g1,
         })
+    }
+
+    fn generate_in_g1<M: Fn(u64) -> F>(size: usize, f: M) -> Vec<PCS::Commitment> {
+        (0..size as u64)
+            .map(|j| PCS::Commitment::generator() * f(j))
+            .collect()
     }
 
     fn polynomials<D: EvaluationDomain<F>, M: Fn(usize, usize) -> F>(
