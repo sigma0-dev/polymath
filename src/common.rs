@@ -33,6 +33,20 @@ where
         Ok(t.challenge(b"x1"))
     }
 
+    pub(crate) fn compute_x2(
+        t: &mut T,
+        commitments: &[PCS::Commitment],
+        point: &F,
+        values: &[F],
+    ) -> Result<F, PolymathError> {
+        t.append_message(b"commitments", &to_bytes!(commitments)?);
+
+        t.append_message(b"point", &to_bytes!(point)?);
+        t.append_message(b"values", &to_bytes!(values)?);
+
+        Ok(t.challenge(b"x2"))
+    }
+
     /// y1 = x1^sigma
     pub(crate) fn compute_y1(x1: F, sigma: u64) -> F {
         x1.pow([sigma])

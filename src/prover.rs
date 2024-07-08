@@ -1,8 +1,8 @@
-use std::ops::{Mul, Neg};
+use std::ops::Mul;
 
 use ark_ec::{ScalarMul, VariableBaseMSM};
 use ark_ff::PrimeField;
-use ark_poly::univariate::{DensePolynomial, SparsePolynomial};
+use ark_poly::univariate::{DenseOrSparsePolynomial, DensePolynomial, SparsePolynomial};
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
@@ -98,7 +98,7 @@ where
         let num_sap_rows = pk.sap_matrices.size().0;
         let domain = D::new(num_sap_rows).unwrap();
 
-        let h_numerator_poly = u2_poly + w_poly.neg();
+        let h_numerator_poly = u2_poly + -w_poly;
         let (h_poly, rem_poly) = h_numerator_poly.divide_by_vanishing_poly(domain).unwrap();
 
         assert!(!h_poly.is_zero() && h_poly.degree() <= domain.size() - 2);
@@ -179,12 +179,34 @@ where
             + h_x_zh_x_by_y_alpha_y_gamma_poly
             + r_x_by_y_gamma_poly;
 
-        // TODO compute H(X) = (A(X)·(Y^-𝛾) + x₂·C(X)·(Y^-𝛾)) - (A(x₁)·(Y^-𝛾) - x₂·C(x₁)·(Y^-𝛾))/(X - x₁)
+        // compute H(X) = (A(X)·(Y^-𝛾) + x₂·C(X)·(Y^-𝛾)) - (A(x₁)·(Y^-𝛾) - x₂·C(x₁)·(Y^-𝛾))/(X - x₁)
 
-        // TODO compute D(X) = H(X)·(Y^𝛾)
-        // TODO compute [D(X)]₁
+        let x2 = Self::compute_x2(&mut t, &[a_g1, c_g1], &x1, &[a_at_x1, c_at_x1])?;
 
-        let d_g1 = todo!();
+        let y_to_minus_gamma_poly = SparsePolynomial::from_coefficients_slice(&[(
+            ((n + pk.vk.sigma) * MINUS_GAMMA) as usize,
+            F::one(),
+        )]);
+
+        let a_at_x1_by_y_gamma_poly = &y_to_minus_gamma_poly * a_at_x1;
+        let c_at_x1_by_y_gamma_poly = &y_to_minus_gamma_poly * c_at_x1;
+
+        // TODO get rid of conversion back and forth - divide sparse poly directly
+        let (h_x_poly, rem_poly) = DenseOrSparsePolynomial::from(
+            a_x_by_y_gamma_poly
+                + &c_x_by_y_gamma_poly * x2
+                + -a_at_x1_by_y_gamma_poly
+                + -(&c_at_x1_by_y_gamma_poly * x2),
+        )
+        .divide_with_q_and_r(&DenseOrSparsePolynomial::from(
+            DensePolynomial::from_coefficients_slice(&[-x1, F::one()]),
+        ))
+        .unwrap();
+        assert!(rem_poly.is_zero());
+
+        // compute [d]₁ = [D(X)·z] = [H(X)·(Y^𝛾)·z]₁
+
+        let d_g1 = Self::msm(&h_x_poly.coeffs, &pk.x_powers_y_gamma_z_g1);
 
         Ok(Proof {
             a_g1,
@@ -347,6 +369,21 @@ where
                     <PCS::Commitment as ScalarMul>::MulBase::from(g1_elem),
                     scalar,
                 )),
+            })
+            .unzip();
+        let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());
+        u_g1
+    }
+
+    fn sparse_msm(scalars: &Vec<(usize, F)>, g1_elems: &Vec<PCS::Commitment>) -> PCS::Commitment {
+        let (gs, cs): (Vec<_>, Vec<_>) = scalars
+            .iter()
+            .map(|(&(i, scalar))| {
+                let g1_elem = g1_elems[i];
+                (
+                    <PCS::Commitment as ScalarMul>::MulBase::from(g1_elem),
+                    scalar,
+                )
             })
             .unzip();
         let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());

@@ -85,7 +85,7 @@ pub trait UnivariatePCS<F: Field>: Clone {
         commitments: &[Self::Commitment],
         point: F,
         values: &[F],
-        proof: &Self::EvalProof,
+        proof: &Self::Commitment,
     ) -> Result<bool, PCSError>;
 }
 
@@ -176,7 +176,7 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
         commitments: &[Self::Commitment],
         point: E::ScalarField,
         values: &[E::ScalarField],
-        proof: &Self::EvalProof,
+        proof: &Self::Commitment,
     ) -> Result<bool, PCSError> {
         todo!()
     }

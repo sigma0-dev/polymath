@@ -17,7 +17,7 @@ pub struct Proof<F: Field, PCS: UnivariatePCS<F>> {
     /// `A(x1)` - evaluation of `A(X)` at point `x1`.
     pub a_at_x1: F,
     /// `[d]₁` - commitment to quotient polynomial `D(X)`.
-    pub d_g1: PCS::EvalProof,
+    pub d_g1: PCS::Commitment,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +64,8 @@ pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
     pub x_powers_zh_by_y_alpha_g1: Vec<PCS::Commitment>,
     /// `[(xⁱ·y^𝛾)ᵢ]₁` - powers of `x` multiplied by `y^𝛾` in `G1`.
     pub x_powers_y_gamma_g1: Vec<PCS::Commitment>,
+    /// `[(xⁱ·y^𝛾·z)ᵢ]₁` - powers of `x` multiplied by `y^𝛾·z` in `G1`.
+    pub x_powers_y_gamma_z_g1: Vec<PCS::Commitment>,
     /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ| j = i + m₀, i ∈ [0, m-m₀)]₁` - linear combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1` for indices of the witness vector.
     pub uw_j_lcs_by_y_alpha_g1: Vec<PCS::Commitment>,
     // TODO there's more
