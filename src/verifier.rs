@@ -21,7 +21,7 @@ where
         let mut t = T::new(B_POLYMATH);
 
         // compute challenge x1
-        let x1: F = Self::compute_x1(&mut t, public_inputs, &proof.a_g1, &proof.c_g1)?;
+        let x1: F = Self::compute_x1(&mut t, public_inputs, &[proof.a_g1, proof.c_g1])?;
         // compute y1=x1^sigma
         let y1: F = Self::compute_y1(x1, vk.sigma);
 

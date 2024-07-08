@@ -119,7 +119,7 @@ where
         let c_g1 = z_j_mul_u_j_w_j_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1;
 
         let mut t = T::new(B_POLYMATH);
-        let x1 = Self::compute_x1(&mut t, instance_assignment, &a_g1, &c_g1)?;
+        let x1 = Self::compute_x1(&mut t, instance_assignment, &[a_g1, c_g1])?;
 
         let y1 = Self::compute_y1(x1, pk.vk.sigma);
 

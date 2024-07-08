@@ -22,13 +22,10 @@ where
     pub(crate) fn compute_x1(
         t: &mut T,
         public_inputs: &[F],
-        a_g1: &PCS::Commitment,
-        c_g1: &PCS::Commitment,
+        commitments: &[PCS::Commitment],
     ) -> Result<F, PolymathError> {
         t.append_message(b"public_inputs", &to_bytes!(&public_inputs)?);
-
-        t.append_message(b"proof.a_g1", &to_bytes!(a_g1)?);
-        t.append_message(b"proof.c_g1", &to_bytes!(c_g1)?);
+        t.append_message(b"commitments", &to_bytes!(commitments)?);
 
         Ok(t.challenge(b"x1"))
     }
