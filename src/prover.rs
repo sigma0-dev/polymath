@@ -141,11 +141,11 @@ where
         let r_a_poly = SparsePolynomial::from(r_a_poly);
 
         let u_x_by_y_gamma_poly =
-            Self::mul_by_x_power(&u_poly, ((n + pk.vk.sigma) * MINUS_GAMMA) as usize);
+            Self::mul_by_x_power(&u_poly, (pk.vk.sigma * MINUS_GAMMA) as usize);
 
         let r_a_x_y_alpha_by_y_gamma_poly = Self::mul_by_x_power(
             &r_a_poly,
-            ((n + pk.vk.sigma) * (MINUS_GAMMA - MINUS_ALPHA)) as usize,
+            (pk.vk.sigma * (MINUS_GAMMA - MINUS_ALPHA)) as usize,
         );
         let a_x_by_y_gamma_poly = u_x_by_y_gamma_poly + r_a_x_y_alpha_by_y_gamma_poly;
 
@@ -162,16 +162,16 @@ where
 
         let witness_u_x_by_y_alpha_poly = Self::mul_by_x_power(
             &SparsePolynomial::from(witness_u_x_poly),
-            ((n + pk.vk.sigma) * MINUS_ALPHA) as usize,
+            (pk.vk.sigma * MINUS_ALPHA) as usize,
         );
         let witness_w_x_by_y_alpha_y_gamma_poly = Self::mul_by_x_power(
             &SparsePolynomial::from(witness_w_x_poly),
-            ((n + pk.vk.sigma) * (MINUS_ALPHA + MINUS_GAMMA)) as usize,
+            (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize,
         );
 
         let h_x_zh_x_by_y_alpha_y_gamma_poly = Self::mul_by_x_power(
             &SparsePolynomial::from(h_numerator_poly),
-            ((n + pk.vk.sigma) * (MINUS_ALPHA + MINUS_GAMMA)) as usize,
+            (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize,
         );
 
         let c_x_by_y_gamma_poly = witness_u_x_by_y_alpha_poly
@@ -184,7 +184,7 @@ where
         let x2 = Self::compute_x2(&mut t, &[a_g1, c_g1], &x1, &[a_at_x1, c_at_x1])?;
 
         let y_to_minus_gamma_poly = SparsePolynomial::from_coefficients_slice(&[(
-            ((n + pk.vk.sigma) * MINUS_GAMMA) as usize,
+            (pk.vk.sigma * MINUS_GAMMA) as usize,
             F::one(),
         )]);
 
@@ -345,15 +345,13 @@ where
         let two = F::one() + F::one();
 
         let two_r_a_x_u_poly = &u_poly.mul(&r_a_poly) * two;
-        let two_r_a_x_u_by_y_gamma_poly = Self::mul_by_x_power(
-            &two_r_a_x_u_poly,
-            ((pk.vk.n + pk.vk.sigma) * MINUS_GAMMA) as usize,
-        );
+        let two_r_a_x_u_by_y_gamma_poly =
+            Self::mul_by_x_power(&two_r_a_x_u_poly, (pk.vk.sigma * MINUS_GAMMA) as usize);
 
         let r_a_square_poly = r_a_poly.mul(&r_a_poly);
         let r_a_square_by_y_gamma_minus_alpha_poly = Self::mul_by_x_power(
             &r_a_square_poly,
-            ((pk.vk.n + pk.vk.sigma) * (MINUS_GAMMA - MINUS_ALPHA)) as usize,
+            (pk.vk.sigma * (MINUS_GAMMA - MINUS_ALPHA)) as usize,
         );
 
         two_r_a_x_u_by_y_gamma_poly + r_a_square_by_y_gamma_minus_alpha_poly + r_a_poly
