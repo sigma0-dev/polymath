@@ -86,10 +86,10 @@ where
 
         let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a, |j| x.pow(&[j]) * y_gamma);
 
-        let x_powers_y_gamma_z_g1 = Self::generate_in_g1(
-            2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize),
-            |j| x.pow(&[j]) * y_gamma * z,
-        );
+        let d_x_by_y_gamma_max_degree =
+            2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize);
+        let x_powers_y_gamma_z_g1 =
+            Self::generate_in_g1(d_x_by_y_gamma_max_degree, |j| x.pow(&[j]) * y_gamma * z);
 
         let x_powers_zh_by_y_alpha_g1 = Self::generate_in_g1(n - 2, |j| {
             x.pow(&[j]) * domain.evaluate_vanishing_polynomial(x) * y_to_minus_alpha
@@ -101,7 +101,7 @@ where
             (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
         });
 
-        let (pcs_ck, pcs_vk) = PCS::setup(domain.size(), &[x, z])?;
+        let (pcs_ck, pcs_vk) = PCS::setup(d_x_by_y_gamma_max_degree, &[x, z])?;
 
         end_timer!(setup_time);
 
@@ -122,7 +122,7 @@ where
             x_powers_y_gamma_g1,
             x_powers_y_gamma_z_g1,
             x_powers_zh_by_y_alpha_g1,
-            uw_j_lcs_by_y_alpha_g1,
+            uj_wj_lcs_by_y_alpha_g1: uw_j_lcs_by_y_alpha_g1,
         })
     }
 

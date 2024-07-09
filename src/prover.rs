@@ -99,26 +99,28 @@ where
 
         let num_sap_rows = pk.sap_matrices.size().0;
         let domain = D::new(num_sap_rows).unwrap();
+        let n = domain.size();
 
         let h_numerator_poly = u2_poly + -w_poly;
         let (h_poly, rem_poly) = h_numerator_poly.divide_by_vanishing_poly(domain).unwrap();
 
-        assert!(!h_poly.is_zero() && h_poly.degree() <= domain.size() - 2);
+        assert!(!h_poly.is_zero() && h_poly.degree() <= n - 2);
         assert!(rem_poly.is_zero());
 
         let r_a_poly = DensePolynomial::from_coefficients_vec(vec![F::rand(rng), F::rand(rng)]);
         assert!(r_a_poly.degree() <= 1);
 
+        assert!(u_poly.degree() <= n - 1);
         let a_g1 = Self::compute_a_g1(pk, &u_poly, &r_a_poly);
 
         let r_g1 = Self::compute_r_g1(pk, &u_poly, &r_a_poly);
 
         let h_zh_by_y_alpha_g1 = Self::msm(&h_poly.coeffs, &pk.x_powers_zh_by_y_alpha_g1);
 
-        let z_j_mul_u_j_w_j_lcs_by_y_alpha_g1 =
-            Self::msm(&witness_assignment.to_vec(), &pk.uw_j_lcs_by_y_alpha_g1);
+        let z_j_mul_uj_wj_lcs_by_y_alpha_g1 =
+            Self::msm(&witness_assignment.to_vec(), &pk.uj_wj_lcs_by_y_alpha_g1);
 
-        let c_g1 = z_j_mul_u_j_w_j_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1;
+        let c_g1 = z_j_mul_uj_wj_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1;
 
         let mut t = T::new(B_POLYMATH);
         let x1 = Self::compute_x1(&mut t, instance_assignment, &[a_g1, c_g1])?;
@@ -136,8 +138,6 @@ where
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, a_at_x1, pi_at_x1);
 
         // compute batch commitment
-
-        let n = domain.size;
 
         let u_poly = SparsePolynomial::from(u_poly);
         let r_a_poly = SparsePolynomial::from(r_a_poly);
@@ -207,7 +207,7 @@ where
         assert!(rem_poly.is_zero());
         assert!(
             d_x_by_y_gamma_poly.degree()
-                <= 2 * (n as usize - 1) + (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize
+                <= 2 * (n - 1) + (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize
         );
 
         // compute [d]₁ = [D(X)·z] = [(D(X)·(Y^-𝛾))·(Y^𝛾)·z]₁
