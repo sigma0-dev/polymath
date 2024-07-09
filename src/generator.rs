@@ -1,3 +1,4 @@
+use ark_ec::pairing::Pairing;
 use ark_ec::PrimeGroup;
 use ark_ff::{Field, PrimeField};
 use ark_poly::univariate::DensePolynomial;
@@ -15,8 +16,9 @@ use crate::{common, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKe
 
 type D<F> = Radix2EvaluationDomain<F>;
 
-impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
+impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
 where
+    P: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
@@ -78,14 +80,14 @@ where
         let y_gamma = y.inverse().unwrap().pow(&[MINUS_GAMMA]);
         let z: F = domain.sample_element_outside_domain(rng);
 
-        let x_powers_g1 = Self::generate_in_g1(n + bnd_a, |j| x.pow(&[j]));
+        let x_powers_g1 = Self::generate_in_g1(n + bnd_a - 1, |j| x.pow(&[j]));
 
-        let x_powers_y_alpha_g1 = Self::generate_in_g1(2 * bnd_a + 1, |j| x.pow(&[j]) * y_alpha);
+        let x_powers_y_alpha_g1 = Self::generate_in_g1(2 * bnd_a, |j| x.pow(&[j]) * y_alpha);
 
-        let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a + 1, |j| x.pow(&[j]) * y_gamma);
+        let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a, |j| x.pow(&[j]) * y_gamma);
 
         let x_powers_y_gamma_z_g1 = Self::generate_in_g1(
-            2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize) + 1,
+            2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize),
             |j| x.pow(&[j]) * y_gamma * z,
         );
 
@@ -93,13 +95,13 @@ where
             x.pow(&[j]) * domain.evaluate_vanishing_polynomial(x) * y_to_minus_alpha
         });
 
-        let uw_j_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0, |j| {
+        let uw_j_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0 - 1, |j| {
             let u_j_poly = DensePolynomial::from_coefficients_slice(&u_j_polynomials[j as usize]);
             let w_j_poly = DensePolynomial::from_coefficients_slice(&w_j_polynomials[j as usize]);
             (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
         });
 
-        let (pcs_ck, pcs_vk) = PCS::setup(domain.size(), rng)?;
+        let (pcs_ck, pcs_vk) = PCS::setup(domain.size(), &[x, z])?;
 
         end_timer!(setup_time);
 
@@ -124,9 +126,9 @@ where
         })
     }
 
-    fn generate_in_g1<M: Fn(u64) -> F>(size: usize, f: M) -> Vec<PCS::Commitment> {
-        (0..size as u64)
-            .map(|j| PCS::Commitment::generator() * f(j))
+    fn generate_in_g1<M: Fn(u64) -> F>(max_index: usize, f: M) -> Vec<PCS::Commitment> {
+        (0..max_index + 1)
+            .map(|j| PCS::Commitment::generator() * f(j as u64))
             .collect()
     }
 

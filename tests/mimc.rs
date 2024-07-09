@@ -150,6 +150,7 @@ fn test_mimc_polymath() {
 
     type Polymath = sigma0_polymath::Polymath<
         Fr,
+        Bls12_381,
         FieldChallengeTranscript<Fr>,
         KZG<Bls12_381, DensePolynomial<Fr>, FieldChallengeTranscript<Fr>>,
     >;

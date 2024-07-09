@@ -48,9 +48,9 @@ pub trait UnivariatePCS<F: Field>: Clone {
     type VerifyingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
     type Transcript: Transcript<Challenge = F>;
 
-    fn setup<R: Rng>(
+    fn setup(
         max_degree: usize,
-        rng: &mut R,
+        trapdoors: &[F; 2],
     ) -> Result<(Self::CommittingKey, Self::VerifyingKey), PCSError>;
 
     fn commit(
@@ -108,6 +108,8 @@ pub struct KZGVerifyingKey<E: Pairing> {
     pub one_g2: E::G2Affine,
     /// `[x]₂` - the `x` trapdoor (toxic random secret) hidden in `G2`.
     pub x_g2: E::G2Affine,
+    /// `[z]₂` - the `z` trapdoor (toxic random secret) hidden in `G2`.
+    pub z_g2: E::G2Affine,
 }
 
 impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::ScalarField>>
@@ -120,10 +122,11 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
     type VerifyingKey = KZGVerifyingKey<E>;
     type Transcript = T;
 
-    fn setup<R: Rng>(
+    fn setup(
         max_degree: usize,
-        rng: &mut R,
+        trapdoors: &[E::ScalarField; 2],
     ) -> Result<(Self::CommittingKey, Self::VerifyingKey), PCSError> {
+        let &[x, z] = trapdoors;
         Ok((
             KZGCommittingKey {
                 _e: Default::default(), // TODO return the actual committing key
@@ -131,7 +134,8 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
             KZGVerifyingKey {
                 one_g1: E::G1Affine::generator(),
                 one_g2: E::G2Affine::generator(),
-                x_g2: E::G2Affine::generator(), // TODO mul by the toxic waste secret
+                x_g2: (E::G2Affine::generator() * x).into(),
+                z_g2: (E::G2Affine::generator() * z).into(),
             },
         ))
     }

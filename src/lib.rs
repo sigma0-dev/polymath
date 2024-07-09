@@ -16,6 +16,7 @@
 extern crate ark_std;
 
 use ark_crypto_primitives::snark::*;
+use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
@@ -47,16 +48,18 @@ mod test;
 pub mod transcript;
 
 /// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
-pub struct Polymath<F: PrimeField, T, PCS>
+pub struct Polymath<F: PrimeField, P, T, PCS>
 where
+    P: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
-    _p: PhantomData<(F, T, PCS)>,
+    _p: PhantomData<(F, P, T, PCS)>,
 }
 
-impl<F: PrimeField, T, PCS> SNARK<F> for Polymath<F, T, PCS>
+impl<F: PrimeField, P, T, PCS> SNARK<F> for Polymath<F, P, T, PCS>
 where
+    P: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
@@ -96,8 +99,9 @@ where
     }
 }
 
-impl<F: PrimeField, T, PCS> CircuitSpecificSetupSNARK<F> for Polymath<F, T, PCS>
+impl<F: PrimeField, P, T, PCS> CircuitSpecificSetupSNARK<F> for Polymath<F, P, T, PCS>
 where
+    P: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {

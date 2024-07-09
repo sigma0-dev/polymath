@@ -1,3 +1,4 @@
+use ark_ec::pairing::Pairing;
 use std::fmt::Debug;
 use std::hash::Hash;
 

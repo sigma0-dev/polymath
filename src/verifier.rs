@@ -1,3 +1,4 @@
+use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 
 use crate::common::{B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
@@ -6,8 +7,9 @@ use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 
-impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
+impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
 where
+    P: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {

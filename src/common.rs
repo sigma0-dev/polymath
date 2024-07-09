@@ -1,3 +1,4 @@
+use ark_ec::pairing::Pairing;
 use ark_ff::{Field, PrimeField};
 use ark_relations::r1cs::Matrix;
 use ark_std::iterable::Iterable;
@@ -14,8 +15,9 @@ pub const MINUS_ALPHA: u64 = 3;
 /// `𝛾` is negative, we use it as an exponent of `y`: `y^𝛾 = (1/y)^(-𝛾)`
 pub const MINUS_GAMMA: u64 = 5;
 
-impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
+impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
 where
+    P: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {

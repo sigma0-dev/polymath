@@ -1,5 +1,6 @@
 use std::ops::Mul;
 
+use ark_ec::pairing::Pairing;
 use ark_ec::{ScalarMul, VariableBaseMSM};
 use ark_ff::PrimeField;
 use ark_poly::univariate::{DenseOrSparsePolynomial, DensePolynomial, SparsePolynomial};
@@ -17,8 +18,9 @@ use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
-impl<F: PrimeField, T, PCS> Polymath<F, T, PCS>
+impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
 where
+    P: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
