@@ -81,6 +81,7 @@ pub trait UnivariatePCS<F: Field>: Clone {
     ) -> Result<bool, PCSError>;
 
     fn batch_verify_single_point(
+        t: &mut Self::Transcript,
         srs: &Self::VerifyingKey,
         commitments: &[Self::Commitment],
         point: F,
@@ -176,7 +177,8 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
     }
 
     fn batch_verify_single_point(
-        srs: &Self::VerifyingKey,
+        t: &mut T,
+        vk: &Self::VerifyingKey,
         commitments: &[Self::Commitment],
         point: E::ScalarField,
         values: &[E::ScalarField],

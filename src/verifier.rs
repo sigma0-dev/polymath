@@ -36,6 +36,7 @@ where
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, proof.a_at_x1, pi_at_x1);
 
         PCS::batch_verify_single_point(
+            &mut t,
             vk.get_pcs_vk(),
             &[proof.a_g1, proof.c_g1],
             x1,
