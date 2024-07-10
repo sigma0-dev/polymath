@@ -95,7 +95,7 @@ where
             x.pow(&[j]) * domain.evaluate_vanishing_polynomial(x) * y_to_minus_alpha
         });
 
-        let uw_j_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0 - 1, |j| {
+        let uj_wj_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0 - 1, |j| {
             let u_j_poly = DensePolynomial::from_coefficients_slice(&u_j_polynomials[j as usize]);
             let w_j_poly = DensePolynomial::from_coefficients_slice(&w_j_polynomials[j as usize]);
             (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
@@ -122,7 +122,7 @@ where
             x_powers_y_gamma_g1,
             x_powers_y_gamma_z_g1,
             x_powers_zh_by_y_alpha_g1,
-            uj_wj_lcs_by_y_alpha_g1: uw_j_lcs_by_y_alpha_g1,
+            uj_wj_lcs_by_y_alpha_g1,
         })
     }
 
