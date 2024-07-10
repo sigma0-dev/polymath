@@ -379,6 +379,7 @@ where
         u_g1
     }
 
+    // TODO remove if not needed
     fn sparse_msm(scalars: &Vec<(usize, F)>, g1_elems: &Vec<PCS::Commitment>) -> PCS::Commitment {
         let (gs, cs): (Vec<_>, Vec<_>) = scalars
             .iter()

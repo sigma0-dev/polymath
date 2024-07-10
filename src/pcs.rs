@@ -5,6 +5,7 @@ use ark_ec::{AffineRepr, PrimeGroup, ScalarMul, VariableBaseMSM};
 use ark_ff::Field;
 use ark_poly::Polynomial;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError};
+use ark_std::iterable::Iterable;
 use ark_std::{clone::Clone, fmt::Debug, rand::Rng};
 
 use crate::Transcript;
@@ -25,17 +26,8 @@ pub trait HasPCSVerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
 
 // `: Clone` bound is needed by Polymath to implement SNARK associated types (that are all `: Clone`)
 pub trait UnivariatePCS<F: Field>: Clone {
-    type Polynomial: Polynomial<F>;
+    type ToBeCommitted;
     type Commitment: Clone
-        + Copy
-        + Eq
-        + PrimeGroup<ScalarField = F>
-        + ScalarMul
-        + VariableBaseMSM
-        + Debug
-        + CanonicalSerialize
-        + CanonicalDeserialize;
-    type EvalProof: Clone
         + Copy
         + Eq
         + PrimeGroup<ScalarField = F>
@@ -48,36 +40,33 @@ pub trait UnivariatePCS<F: Field>: Clone {
     type VerifyingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
     type Transcript: Transcript<Challenge = F>;
 
-    fn setup(
-        max_degree: usize,
-        trapdoors: &[F; 2],
-    ) -> Result<(Self::CommittingKey, Self::VerifyingKey), PCSError>;
+    fn setup_vk(trapdoors: &[F; 2]) -> Self::VerifyingKey;
 
     fn commit(
         srs: &Self::CommittingKey,
-        polynomial: &Self::Polynomial,
+        seq: &Self::ToBeCommitted,
     ) -> Result<Self::Commitment, PCSError>;
 
     fn prove_eval(
         srs: &Self::CommittingKey,
-        polynomial: &Self::Polynomial,
+        polynomial: &Self::ToBeCommitted,
         point: F,
         value: Option<F>,
-    ) -> Result<(F, Self::EvalProof), PCSError>;
+    ) -> Result<(F, Self::Commitment), PCSError>;
 
     fn batch_eval_single_point(
         srs: &Self::CommittingKey,
-        polynomials: &[Self::Polynomial],
+        polynomials: &[Self::ToBeCommitted],
         point: F,
         values: &[Option<F>],
-    ) -> Result<(Vec<F>, Self::EvalProof), PCSError>;
+    ) -> Result<(Vec<F>, Self::Commitment), PCSError>;
 
     fn verify(
         srs: &Self::VerifyingKey,
         commitment: &Self::Commitment,
         point: F,
         value: F,
-        proof: &Self::EvalProof,
+        proof: &Self::Commitment,
     ) -> Result<bool, PCSError>;
 
     fn batch_verify_single_point(
@@ -91,9 +80,8 @@ pub trait UnivariatePCS<F: Field>: Clone {
 }
 
 #[derive(Clone)]
-pub struct KZG<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::ScalarField>>
-{
-    _ept: PhantomData<(E, P, T)>,
+pub struct KZG<E: Pairing, T: Transcript<Challenge = E::ScalarField>> {
+    _ept: PhantomData<(E, T)>,
 }
 
 #[derive(Clone, Copy, Debug, CanonicalSerialize, CanonicalDeserialize)]
@@ -113,56 +101,47 @@ pub struct KZGVerifyingKey<E: Pairing> {
     pub z_g2: E::G2Affine,
 }
 
-impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::ScalarField>>
-    UnivariatePCS<E::ScalarField> for KZG<E, P, T>
+impl<E: Pairing, T: Transcript<Challenge = E::ScalarField>> UnivariatePCS<E::ScalarField>
+    for KZG<E, T>
 {
-    type Polynomial = P;
+    type ToBeCommitted = Vec<E::ScalarField>;
     type Commitment = E::G1;
-    type EvalProof = E::G1;
     type CommittingKey = KZGCommittingKey<E>;
     type VerifyingKey = KZGVerifyingKey<E>;
     type Transcript = T;
 
-    fn setup(
-        max_degree: usize,
-        trapdoors: &[E::ScalarField; 2],
-    ) -> Result<(Self::CommittingKey, Self::VerifyingKey), PCSError> {
+    fn setup_vk(trapdoors: &[E::ScalarField; 2]) -> Self::VerifyingKey {
         let &[x, z] = trapdoors;
-        Ok((
-            KZGCommittingKey {
-                _e: Default::default(), // TODO return the actual committing key
-            },
-            KZGVerifyingKey {
-                one_g1: E::G1Affine::generator(),
-                one_g2: E::G2Affine::generator(),
-                x_g2: (E::G2Affine::generator() * x).into(),
-                z_g2: (E::G2Affine::generator() * z).into(),
-            },
-        ))
+        KZGVerifyingKey {
+            one_g1: E::G1Affine::generator(),
+            one_g2: E::G2Affine::generator(),
+            x_g2: (E::G2Affine::generator() * x).into(),
+            z_g2: (E::G2Affine::generator() * z).into(),
+        }
     }
 
     fn commit(
         srs: &Self::CommittingKey,
-        polynomial: &Self::Polynomial,
+        polynomial: &Self::ToBeCommitted,
     ) -> Result<Self::Commitment, PCSError> {
         todo!()
     }
 
     fn prove_eval(
         srs: &Self::CommittingKey,
-        polynomial: &Self::Polynomial,
+        polynomial: &Self::ToBeCommitted,
         point: E::ScalarField,
         value: Option<E::ScalarField>,
-    ) -> Result<(E::ScalarField, Self::EvalProof), PCSError> {
+    ) -> Result<(E::ScalarField, Self::Commitment), PCSError> {
         todo!()
     }
 
     fn batch_eval_single_point(
         srs: &Self::CommittingKey,
-        polynomials: &[Self::Polynomial],
+        polynomials: &[Self::ToBeCommitted],
         point: E::ScalarField,
         values: &[Option<E::ScalarField>],
-    ) -> Result<(Vec<E::ScalarField>, Self::EvalProof), PCSError> {
+    ) -> Result<(Vec<E::ScalarField>, Self::Commitment), PCSError> {
         todo!()
     }
 
@@ -171,7 +150,7 @@ impl<E: Pairing, P: Polynomial<E::ScalarField>, T: Transcript<Challenge = E::Sca
         commitment: &Self::Commitment,
         point: E::ScalarField,
         value: E::ScalarField,
-        proof: &Self::EvalProof,
+        proof: &Self::Commitment,
     ) -> Result<bool, PCSError> {
         todo!()
     }

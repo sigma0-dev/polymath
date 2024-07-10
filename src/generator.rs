@@ -101,7 +101,7 @@ where
             (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
         });
 
-        let (pcs_ck, pcs_vk) = PCS::setup(d_x_by_y_gamma_max_degree, &[x, z])?;
+        let pcs_vk = PCS::setup_vk(&[x, z]);
 
         end_timer!(setup_time);
 

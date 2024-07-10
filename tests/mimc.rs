@@ -152,7 +152,7 @@ fn test_mimc_polymath() {
         Fr,
         Bls12_381,
         FieldChallengeTranscript<Fr>,
-        KZG<Bls12_381, DensePolynomial<Fr>, FieldChallengeTranscript<Fr>>,
+        KZG<Bls12_381, FieldChallengeTranscript<Fr>>,
     >;
 
     // This may not be cryptographically safe, use

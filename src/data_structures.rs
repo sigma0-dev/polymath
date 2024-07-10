@@ -29,12 +29,12 @@ pub struct VerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
     pub pcs_vk: PCS::VerifyingKey,
     /// `n` - the domain size. Must be a power of 2.
     pub n: u64,
-    /// `m₀` - the public input subdomain size.
+    /// `m₀` - public input size (doesn't need to be a power of 2).
     pub m0: u64,
     /// `𝜎 = n + 3` - the exponent for "virtual" trapdoor `y = x^𝜎`
     pub sigma: u64,
     /// `𝜔` - root of unity, element of the domain group: `X^n - 1 = 0`,
-    /// `𝜔^(j·n) = 1`
+    /// `𝜔^(j·n) = 1` for any `j`
     pub omega: F,
 }
 
