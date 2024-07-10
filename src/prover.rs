@@ -24,7 +24,7 @@ where
 {
     pub(crate) fn create_proof<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
-        pk: &ProvingKey<F, E>,
+        pk: &ProvingKey<E>,
         rng: &mut R,
     ) -> Result<Proof<E>, PolymathError> {
         let prover_time = start_timer!(|| "Polymath::Prover");
@@ -67,7 +67,7 @@ where
     }
 
     fn create_proof_with_assignment<R: RngCore>(
-        pk: &ProvingKey<F, E>,
+        pk: &ProvingKey<E>,
         instance_assignment: &[F],
         witness_assignment: &[F],
         rng: &mut R,
@@ -260,7 +260,7 @@ where
             .collect()
     }
 
-    fn compute_y_vec(pk: &ProvingKey<F, E>, x: &[F], w: &[F]) -> Vec<F> {
+    fn compute_y_vec(pk: &ProvingKey<E>, x: &[F], w: &[F]) -> Vec<F> {
         let zero = F::zero();
         let one = F::one();
         let y_m0: Vec<F> = (1..pk.sap_matrices.num_instance_variables)
@@ -312,7 +312,7 @@ where
     }
 
     fn compute_a_g1(
-        pk: &ProvingKey<F, E>,
+        pk: &ProvingKey<E>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
     ) -> E::G1Affine {
@@ -322,7 +322,7 @@ where
     }
 
     fn compute_r_g1(
-        pk: &ProvingKey<F, E>,
+        pk: &ProvingKey<E>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
     ) -> E::G1Affine {
@@ -341,7 +341,7 @@ where
     }
 
     fn compute_r_x_by_y_gamma_poly(
-        pk: &ProvingKey<F, E>,
+        pk: &ProvingKey<E>,
         u_poly: &SparsePolynomial<F>,
         r_a_poly: SparsePolynomial<F>,
     ) -> SparsePolynomial<F> {

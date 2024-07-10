@@ -58,10 +58,10 @@ where
     E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
 {
-    type ProvingKey = ProvingKey<F, E>;
-    type VerifyingKey = VerifyingKey<F, E>;
+    type ProvingKey = ProvingKey<E>;
+    type VerifyingKey = VerifyingKey<E>;
     type Proof = Proof<E>;
-    type ProcessedVerifyingKey = VerifyingKey<F, E>;
+    type ProcessedVerifyingKey = VerifyingKey<E>;
     type Error = PolymathError;
 
     fn circuit_specific_setup<C: ConstraintSynthesizer<F>, R: RngCore>(

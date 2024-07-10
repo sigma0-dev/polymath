@@ -55,7 +55,7 @@ where
     }
 
     pub(crate) fn compute_pi_at_x1(
-        vk: &VerifyingKey<F, E>,
+        vk: &VerifyingKey<E>,
         public_inputs: &[F],
         x1: F,
         y1_gamma: F,

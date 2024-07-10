@@ -1,5 +1,5 @@
 use ark_ec::pairing::Pairing;
-use ark_ec::{AffineRepr, PrimeGroup};
+use ark_ec::AffineRepr;
 use ark_ff::{Field, PrimeField};
 use ark_poly::univariate::DensePolynomial;
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
@@ -25,7 +25,7 @@ where
     pub(crate) fn generate_proving_key<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
         rng: &mut R,
-    ) -> Result<ProvingKey<F, E>, PolymathError> {
+    ) -> Result<ProvingKey<E>, PolymathError> {
         let setup_time = start_timer!(|| "Polymath::Generator");
         ///////////////////////////////////////////////////////////////////////////
 

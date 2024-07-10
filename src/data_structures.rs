@@ -2,7 +2,6 @@ use ark_ec::pairing::Pairing;
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use ark_ff::{FftField, Field};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Valid};
 
 use crate::generator::SAPMatrices;
@@ -36,7 +35,7 @@ pub struct KZGVerifyingKey<E: Pairing> {
 
 /// Verification key in the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct VerifyingKey<F: Field, E: Pairing> {
+pub struct VerifyingKey<E: Pairing> {
     pub vk: KZGVerifyingKey<E>,
     /// `n` - the domain size. Must be a power of 2.
     pub n: u64,
@@ -46,19 +45,19 @@ pub struct VerifyingKey<F: Field, E: Pairing> {
     pub sigma: u64,
     /// `𝜔` - root of unity, element of the domain group: `X^n - 1 = 0`,
     /// `𝜔^(j·n) = 1` for any `j`
-    pub omega: F,
+    pub omega: E::ScalarField,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Proving key for the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<F: FftField, E: Pairing<ScalarField = F>> {
+pub struct ProvingKey<E: Pairing> {
     /// The underlying verification key.
-    pub vk: VerifyingKey<F, E>,
-    pub sap_matrices: SAPMatrices<F>,
-    pub u_j_polynomials: Vec<Vec<F>>,
-    pub w_j_polynomials: Vec<Vec<F>>,
+    pub vk: VerifyingKey<E>,
+    pub sap_matrices: SAPMatrices<E::ScalarField>,
+    pub u_j_polynomials: Vec<Vec<E::ScalarField>>,
+    pub w_j_polynomials: Vec<Vec<E::ScalarField>>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
     pub x_powers_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.

@@ -14,7 +14,7 @@ where
     /// Verify a Polymath proof `proof` against the verification key `vk`,
     /// with respect to the instance `public_inputs`.
     pub(crate) fn verify_proof(
-        vk: &VerifyingKey<F, E>,
+        vk: &VerifyingKey<E>,
         proof: &Proof<E>,
         public_inputs: &[F],
     ) -> Result<bool, PolymathError> {
