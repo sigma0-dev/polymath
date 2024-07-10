@@ -7,16 +7,16 @@ use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 
-impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
+impl<F: PrimeField, E, T, PCS> Polymath<F, E, T, PCS>
 where
-    P: Pairing<ScalarField = F>,
+    E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
     /// Verify a Polymath proof `proof` against the verification key `vk`,
     /// with respect to the instance `public_inputs`.
     pub(crate) fn verify_proof(
-        vk: &VerifyingKey<F, PCS>,
+        vk: &VerifyingKey<F, E>,
         proof: &Proof<F, PCS>,
         public_inputs: &[F],
     ) -> Result<bool, PolymathError> {
@@ -35,14 +35,15 @@ where
         // compute c_at_x1
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, proof.a_at_x1, pi_at_x1);
 
-        PCS::batch_verify_single_point(
-            &mut t,
-            vk.get_pcs_vk(),
-            &[proof.a_g1, proof.c_g1],
-            x1,
-            &[proof.a_at_x1, c_at_x1],
-            &proof.d_g1,
-        )
-        .map_err(|e| e.into())
+        todo!()
+        // PCS::batch_verify_single_point(
+        //     &mut t,
+        //     &vk.vk,
+        //     &[proof.a_g1, proof.c_g1],
+        //     x1,
+        //     &[proof.a_at_x1, c_at_x1],
+        //     &proof.d_g1,
+        // )
+        // .map_err(|e| e.into())
     }
 }

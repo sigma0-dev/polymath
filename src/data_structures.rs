@@ -23,10 +23,22 @@ pub struct Proof<F: Field, PCS: UnivariatePCS<F>> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#[derive(Clone, Copy, Debug, CanonicalSerialize, CanonicalDeserialize)]
+pub struct KZGVerifyingKey<E: Pairing> {
+    /// `[1]₁` - the `G1` group generator.
+    pub one_g1: E::G1Affine,
+    /// `[1]₂` - the `G2` group generator.
+    pub one_g2: E::G2Affine,
+    /// `[x]₂` - the `x` trapdoor (toxic random secret) hidden in `G2`.
+    pub x_g2: E::G2Affine,
+    /// `[z]₂` - the `z` trapdoor (toxic random secret) hidden in `G2`.
+    pub z_g2: E::G2Affine,
+}
+
 /// Verification key in the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct VerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
-    pub pcs_vk: PCS::VerifyingKey,
+pub struct VerifyingKey<F: Field, E: Pairing> {
+    pub vk: KZGVerifyingKey<E>,
     /// `n` - the domain size. Must be a power of 2.
     pub n: u64,
     /// `m₀` - public input size (doesn't need to be a power of 2).
@@ -38,21 +50,13 @@ pub struct VerifyingKey<F: Field, PCS: UnivariatePCS<F>> {
     pub omega: F,
 }
 
-// TODO embed PCSVerifying key instead of hardcoding its elements
-
-impl<F: Field, PCS: UnivariatePCS<F>> HasPCSVerifyingKey<F, PCS> for VerifyingKey<F, PCS> {
-    fn get_pcs_vk(&self) -> &PCS::VerifyingKey {
-        &self.pcs_vk
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Proving key for the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<F: FftField, PCS: UnivariatePCS<F>> {
+pub struct ProvingKey<F: FftField, E: Pairing, PCS: UnivariatePCS<F>> {
     /// The underlying verification key.
-    pub vk: VerifyingKey<F, PCS>,
+    pub vk: VerifyingKey<F, E>,
     pub sap_matrices: SAPMatrices<F>,
     pub u_j_polynomials: Vec<Vec<F>>,
     pub w_j_polynomials: Vec<Vec<F>>,

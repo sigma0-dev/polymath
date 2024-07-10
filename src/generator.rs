@@ -1,5 +1,5 @@
 use ark_ec::pairing::Pairing;
-use ark_ec::PrimeGroup;
+use ark_ec::{AffineRepr, PrimeGroup};
 use ark_ff::{Field, PrimeField};
 use ark_poly::univariate::DensePolynomial;
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
@@ -12,20 +12,22 @@ use ark_std::Zero;
 
 use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
 use crate::pcs::UnivariatePCS;
-use crate::{common, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
+use crate::{
+    common, KZGVerifyingKey, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey,
+};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
-impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
+impl<F: PrimeField, E: Pairing, T, PCS> Polymath<F, E, T, PCS>
 where
-    P: Pairing<ScalarField = F>,
+    E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
     pub(crate) fn generate_proving_key<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
         rng: &mut R,
-    ) -> Result<ProvingKey<F, PCS>, PolymathError> {
+    ) -> Result<ProvingKey<F, E, PCS>, PolymathError> {
         let setup_time = start_timer!(|| "Polymath::Generator");
         ///////////////////////////////////////////////////////////////////////////
 
@@ -101,13 +103,18 @@ where
             (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
         });
 
-        let pcs_vk = PCS::setup_vk(&[x, z]);
+        let vk = KZGVerifyingKey {
+            one_g1: E::G1Affine::generator(),
+            one_g2: E::G2Affine::generator(),
+            x_g2: (E::G2Affine::generator() * x).into(),
+            z_g2: (E::G2Affine::generator() * z).into(),
+        };
 
         end_timer!(setup_time);
 
         Ok(ProvingKey {
             vk: VerifyingKey {
-                pcs_vk,
+                vk,
                 n: n as u64,
                 m0: m0 as u64,
                 sigma: sigma as u64,

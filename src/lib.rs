@@ -48,25 +48,26 @@ mod test;
 pub mod transcript;
 
 /// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
-pub struct Polymath<F: PrimeField, P, T, PCS>
+pub struct Polymath<F: PrimeField, E, T, PCS>
 where
-    P: Pairing<ScalarField = F>,
+    F: PrimeField,
+    E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
-    _p: PhantomData<(F, P, T, PCS)>,
+    _p: PhantomData<(F, E, T, PCS)>,
 }
 
-impl<F: PrimeField, P, T, PCS> SNARK<F> for Polymath<F, P, T, PCS>
+impl<F: PrimeField, E, T, PCS> SNARK<F> for Polymath<F, E, T, PCS>
 where
-    P: Pairing<ScalarField = F>,
+    E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
-    type ProvingKey = ProvingKey<F, PCS>;
-    type VerifyingKey = VerifyingKey<F, PCS>;
+    type ProvingKey = ProvingKey<F, E, PCS>;
+    type VerifyingKey = VerifyingKey<F, E>;
     type Proof = Proof<F, PCS>;
-    type ProcessedVerifyingKey = VerifyingKey<F, PCS>;
+    type ProcessedVerifyingKey = VerifyingKey<F, E>;
     type Error = PolymathError;
 
     fn circuit_specific_setup<C: ConstraintSynthesizer<F>, R: RngCore>(
@@ -99,9 +100,9 @@ where
     }
 }
 
-impl<F: PrimeField, P, T, PCS> CircuitSpecificSetupSNARK<F> for Polymath<F, P, T, PCS>
+impl<F: PrimeField, E, T, PCS> CircuitSpecificSetupSNARK<F> for Polymath<F, E, T, PCS>
 where
-    P: Pairing<ScalarField = F>,
+    E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {

@@ -18,15 +18,15 @@ use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
-impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
+impl<F: PrimeField, E, T, PCS> Polymath<F, E, T, PCS>
 where
-    P: Pairing<ScalarField = F>,
+    E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
     pub(crate) fn create_proof<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
-        pk: &ProvingKey<F, PCS>,
+        pk: &ProvingKey<F, E, PCS>,
         rng: &mut R,
     ) -> Result<Proof<F, PCS>, PolymathError> {
         let prover_time = start_timer!(|| "Polymath::Prover");
@@ -69,7 +69,7 @@ where
     }
 
     fn create_proof_with_assignment<R: RngCore>(
-        pk: &ProvingKey<F, PCS>,
+        pk: &ProvingKey<F, E, PCS>,
         instance_assignment: &[F],
         witness_assignment: &[F],
         rng: &mut R,
@@ -263,7 +263,7 @@ where
             .collect()
     }
 
-    fn compute_y_vec(pk: &ProvingKey<F, PCS>, x: &[F], w: &[F]) -> Vec<F> {
+    fn compute_y_vec(pk: &ProvingKey<F, E, PCS>, x: &[F], w: &[F]) -> Vec<F> {
         let zero = F::zero();
         let one = F::one();
         let y_m0: Vec<F> = (1..pk.sap_matrices.num_instance_variables)
@@ -315,7 +315,7 @@ where
     }
 
     fn compute_a_g1(
-        pk: &ProvingKey<F, PCS>,
+        pk: &ProvingKey<F, E, PCS>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
     ) -> PCS::Commitment {
@@ -325,7 +325,7 @@ where
     }
 
     fn compute_r_g1(
-        pk: &ProvingKey<F, PCS>,
+        pk: &ProvingKey<F, E, PCS>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
     ) -> PCS::Commitment {
@@ -344,7 +344,7 @@ where
     }
 
     fn compute_r_x_by_y_gamma_poly(
-        pk: &ProvingKey<F, PCS>,
+        pk: &ProvingKey<F, E, PCS>,
         u_poly: &SparsePolynomial<F>,
         r_a_poly: SparsePolynomial<F>,
     ) -> SparsePolynomial<F> {

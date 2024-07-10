@@ -15,9 +15,9 @@ pub const MINUS_ALPHA: u64 = 3;
 /// `𝛾` is negative, we use it as an exponent of `y`: `y^𝛾 = (1/y)^(-𝛾)`
 pub const MINUS_GAMMA: u64 = 5;
 
-impl<F: PrimeField, P, T, PCS> Polymath<F, P, T, PCS>
+impl<F: PrimeField, E, T, PCS> Polymath<F, E, T, PCS>
 where
-    P: Pairing<ScalarField = F>,
+    E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
     PCS: UnivariatePCS<F, Transcript = T>,
 {
@@ -57,7 +57,7 @@ where
     }
 
     pub(crate) fn compute_pi_at_x1(
-        vk: &VerifyingKey<F, PCS>,
+        vk: &VerifyingKey<F, E>,
         public_inputs: &[F],
         x1: F,
         y1_gamma: F,

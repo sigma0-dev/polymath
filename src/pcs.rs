@@ -8,7 +8,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, SerializationError
 use ark_std::iterable::Iterable;
 use ark_std::{clone::Clone, fmt::Debug, rand::Rng};
 
-use crate::Transcript;
+use crate::{KZGVerifyingKey, Transcript};
 
 #[derive(thiserror::Error, Debug)]
 pub enum PCSError {
@@ -39,8 +39,6 @@ pub trait UnivariatePCS<F: Field>: Clone {
     type CommittingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
     type VerifyingKey: Clone + Copy + Debug + CanonicalSerialize + CanonicalDeserialize;
     type Transcript: Transcript<Challenge = F>;
-
-    fn setup_vk(trapdoors: &[F; 2]) -> Self::VerifyingKey;
 
     fn commit(
         srs: &Self::CommittingKey,
@@ -89,18 +87,6 @@ pub struct KZGCommittingKey<E: Pairing> {
     _e: PhantomData<E>,
 }
 
-#[derive(Clone, Copy, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct KZGVerifyingKey<E: Pairing> {
-    /// `[1]₁` - the `G1` group generator.
-    pub one_g1: E::G1Affine,
-    /// `[1]₂` - the `G2` group generator.
-    pub one_g2: E::G2Affine,
-    /// `[x]₂` - the `x` trapdoor (toxic random secret) hidden in `G2`.
-    pub x_g2: E::G2Affine,
-    /// `[z]₂` - the `z` trapdoor (toxic random secret) hidden in `G2`.
-    pub z_g2: E::G2Affine,
-}
-
 impl<E: Pairing, T: Transcript<Challenge = E::ScalarField>> UnivariatePCS<E::ScalarField>
     for KZG<E, T>
 {
@@ -109,16 +95,6 @@ impl<E: Pairing, T: Transcript<Challenge = E::ScalarField>> UnivariatePCS<E::Sca
     type CommittingKey = KZGCommittingKey<E>;
     type VerifyingKey = KZGVerifyingKey<E>;
     type Transcript = T;
-
-    fn setup_vk(trapdoors: &[E::ScalarField; 2]) -> Self::VerifyingKey {
-        let &[x, z] = trapdoors;
-        KZGVerifyingKey {
-            one_g1: E::G1Affine::generator(),
-            one_g2: E::G2Affine::generator(),
-            x_g2: (E::G2Affine::generator() * x).into(),
-            z_g2: (E::G2Affine::generator() * z).into(),
-        }
-    }
 
     fn commit(
         srs: &Self::CommittingKey,
