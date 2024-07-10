@@ -23,8 +23,6 @@ use ark_serialize::SerializationError;
 use ark_std::marker::PhantomData;
 use ark_std::{clone::Clone, fmt::Debug, rand::RngCore, result::Result};
 
-use crate::pcs::{PCSError, UnivariatePCS};
-
 pub use self::data_structures::*;
 pub use self::transcript::*;
 
@@ -42,31 +40,27 @@ pub mod verifier;
 
 mod common;
 mod r#macro;
-pub mod pcs;
 #[cfg(test)]
 mod test;
 pub mod transcript;
 
 /// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
-pub struct Polymath<F: PrimeField, E, T, PCS>
+pub struct Polymath<E, T>
 where
-    F: PrimeField,
-    E: Pairing<ScalarField = F>,
-    T: Transcript<Challenge = F>,
-    PCS: UnivariatePCS<F, Transcript = T>,
+    E: Pairing,
+    T: Transcript<Challenge = E::ScalarField>,
 {
-    _p: PhantomData<(F, E, T, PCS)>,
+    _p: PhantomData<(E, T)>,
 }
 
-impl<F: PrimeField, E, T, PCS> SNARK<F> for Polymath<F, E, T, PCS>
+impl<F: PrimeField, E, T> SNARK<F> for Polymath<E, T>
 where
     E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
-    PCS: UnivariatePCS<F, Transcript = T>,
 {
-    type ProvingKey = ProvingKey<F, E, PCS>;
+    type ProvingKey = ProvingKey<F, E>;
     type VerifyingKey = VerifyingKey<F, E>;
-    type Proof = Proof<F, PCS>;
+    type Proof = Proof<E>;
     type ProcessedVerifyingKey = VerifyingKey<F, E>;
     type Error = PolymathError;
 
@@ -100,11 +94,10 @@ where
     }
 }
 
-impl<F: PrimeField, E, T, PCS> CircuitSpecificSetupSNARK<F> for Polymath<F, E, T, PCS>
+impl<F: PrimeField, E, T> CircuitSpecificSetupSNARK<F> for Polymath<E, T>
 where
     E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
-    PCS: UnivariatePCS<F, Transcript = T>,
 {
 }
 
@@ -114,6 +107,6 @@ pub enum PolymathError {
     SynthesisError(#[from] SynthesisError),
     #[error(transparent)]
     SerializationError(#[from] SerializationError),
-    #[error(transparent)]
-    PCSError(#[from] PCSError),
+    // #[error(transparent)]
+    // PCSError(#[from] PCSError),
 }

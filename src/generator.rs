@@ -11,23 +11,21 @@ use ark_std::rand::RngCore;
 use ark_std::Zero;
 
 use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
-use crate::pcs::UnivariatePCS;
 use crate::{
     common, KZGVerifyingKey, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey,
 };
 
 type D<F> = Radix2EvaluationDomain<F>;
 
-impl<F: PrimeField, E: Pairing, T, PCS> Polymath<F, E, T, PCS>
+impl<F: PrimeField, E: Pairing, T> Polymath<E, T>
 where
     E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
-    PCS: UnivariatePCS<F, Transcript = T>,
 {
     pub(crate) fn generate_proving_key<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
         rng: &mut R,
-    ) -> Result<ProvingKey<F, E, PCS>, PolymathError> {
+    ) -> Result<ProvingKey<F, E>, PolymathError> {
         let setup_time = start_timer!(|| "Polymath::Generator");
         ///////////////////////////////////////////////////////////////////////////
 
@@ -133,9 +131,9 @@ where
         })
     }
 
-    fn generate_in_g1<M: Fn(u64) -> F>(max_index: usize, f: M) -> Vec<PCS::Commitment> {
+    fn generate_in_g1<M: Fn(u64) -> F>(max_index: usize, f: M) -> Vec<E::G1Affine> {
         (0..max_index + 1)
-            .map(|j| PCS::Commitment::generator() * f(j as u64))
+            .map(|j| (E::G1Affine::generator() * f(j as u64)).into())
             .collect()
     }
 

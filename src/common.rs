@@ -4,7 +4,6 @@ use ark_relations::r1cs::Matrix;
 use ark_std::iterable::Iterable;
 use ark_std::{One, Zero};
 
-use crate::pcs::UnivariatePCS;
 use crate::{to_bytes, Polymath, PolymathError, Transcript, VerifyingKey};
 
 pub const B_POLYMATH: &'static [u8; 8] = b"polymath";
@@ -15,16 +14,15 @@ pub const MINUS_ALPHA: u64 = 3;
 /// `𝛾` is negative, we use it as an exponent of `y`: `y^𝛾 = (1/y)^(-𝛾)`
 pub const MINUS_GAMMA: u64 = 5;
 
-impl<F: PrimeField, E, T, PCS> Polymath<F, E, T, PCS>
+impl<F: PrimeField, E, T> Polymath<E, T>
 where
     E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
-    PCS: UnivariatePCS<F, Transcript = T>,
 {
     pub(crate) fn compute_x1(
         t: &mut T,
         public_inputs: &[F],
-        commitments: &[PCS::Commitment],
+        commitments: &[E::G1Affine],
     ) -> Result<F, PolymathError> {
         t.append_message(b"public_inputs", &to_bytes!(&public_inputs)?);
         t.append_message(b"commitments", &to_bytes!(commitments)?);
@@ -34,7 +32,7 @@ where
 
     pub(crate) fn compute_x2(
         t: &mut T,
-        commitments: &[PCS::Commitment],
+        commitments: &[E::G1Affine],
         point: &F,
         values: &[F],
     ) -> Result<F, PolymathError> {

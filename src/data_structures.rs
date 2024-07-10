@@ -6,19 +6,18 @@ use ark_ff::{FftField, Field};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Valid};
 
 use crate::generator::SAPMatrices;
-use crate::pcs::{HasPCSVerifyingKey, UnivariatePCS};
 
 /// Proof in the Polymath zkSNARK.
 #[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
-pub struct Proof<F: Field, PCS: UnivariatePCS<F>> {
+pub struct Proof<E: Pairing> {
     /// `[a]₁` - commitment to `A(X)`.
-    pub a_g1: PCS::Commitment,
+    pub a_g1: E::G1Affine,
     /// `[c]₁` - commitment to `C(X)`.
-    pub c_g1: PCS::Commitment,
+    pub c_g1: E::G1Affine,
     /// `A(x1)` - evaluation of `A(X)` at point `x1`.
-    pub a_at_x1: F,
+    pub a_at_x1: E::ScalarField,
     /// `[d]₁` - commitment to quotient polynomial `D(X)`.
-    pub d_g1: PCS::Commitment,
+    pub d_g1: E::G1Affine,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,23 +53,23 @@ pub struct VerifyingKey<F: Field, E: Pairing> {
 
 /// Proving key for the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct ProvingKey<F: FftField, E: Pairing, PCS: UnivariatePCS<F>> {
+pub struct ProvingKey<F: FftField, E: Pairing<ScalarField = F>> {
     /// The underlying verification key.
     pub vk: VerifyingKey<F, E>,
     pub sap_matrices: SAPMatrices<F>,
     pub u_j_polynomials: Vec<Vec<F>>,
     pub w_j_polynomials: Vec<Vec<F>>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
-    pub x_powers_g1: Vec<PCS::Commitment>,
+    pub x_powers_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.
-    pub x_powers_y_alpha_g1: Vec<PCS::Commitment>,
+    pub x_powers_y_alpha_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·Z_H(x)/(y^𝛼))ᵢ]₁` - powers of `x` multiplied by `Z_H(x)/(y^𝛼)` in `G1`.
-    pub x_powers_zh_by_y_alpha_g1: Vec<PCS::Commitment>,
+    pub x_powers_zh_by_y_alpha_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛾)ᵢ]₁` - powers of `x` multiplied by `y^𝛾` in `G1`.
-    pub x_powers_y_gamma_g1: Vec<PCS::Commitment>,
+    pub x_powers_y_gamma_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛾·z)ᵢ]₁` - powers of `x` multiplied by `y^𝛾·z` in `G1`.
-    pub x_powers_y_gamma_z_g1: Vec<PCS::Commitment>,
+    pub x_powers_y_gamma_z_g1: Vec<E::G1Affine>,
     /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ| j = i + m₀, i ∈ [0, m-m₀)]₁` - linear combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1` for indices of the witness vector.
-    pub uj_wj_lcs_by_y_alpha_g1: Vec<PCS::Commitment>,
+    pub uj_wj_lcs_by_y_alpha_g1: Vec<E::G1Affine>,
     // TODO there's more
 }

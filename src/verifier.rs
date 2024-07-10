@@ -2,22 +2,20 @@ use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 
 use crate::common::{B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
-use crate::pcs::{HasPCSVerifyingKey, UnivariatePCS};
 use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
 
 use super::Proof;
 
-impl<F: PrimeField, E, T, PCS> Polymath<F, E, T, PCS>
+impl<F: PrimeField, E, T> Polymath<E, T>
 where
     E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
-    PCS: UnivariatePCS<F, Transcript = T>,
 {
     /// Verify a Polymath proof `proof` against the verification key `vk`,
     /// with respect to the instance `public_inputs`.
     pub(crate) fn verify_proof(
         vk: &VerifyingKey<F, E>,
-        proof: &Proof<F, PCS>,
+        proof: &Proof<E>,
         public_inputs: &[F],
     ) -> Result<bool, PolymathError> {
         let mut t = T::new(B_POLYMATH);

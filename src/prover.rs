@@ -13,22 +13,20 @@ use ark_std::rand::RngCore;
 use ark_std::Zero;
 
 use crate::common::{m_at, B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
-use crate::pcs::UnivariatePCS;
 use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
-impl<F: PrimeField, E, T, PCS> Polymath<F, E, T, PCS>
+impl<F: PrimeField, E, T> Polymath<E, T>
 where
     E: Pairing<ScalarField = F>,
     T: Transcript<Challenge = F>,
-    PCS: UnivariatePCS<F, Transcript = T>,
 {
     pub(crate) fn create_proof<C: ConstraintSynthesizer<F>, R: RngCore>(
         circuit: C,
-        pk: &ProvingKey<F, E, PCS>,
+        pk: &ProvingKey<F, E>,
         rng: &mut R,
-    ) -> Result<Proof<F, PCS>, PolymathError> {
+    ) -> Result<Proof<E>, PolymathError> {
         let prover_time = start_timer!(|| "Polymath::Prover");
         let cs = ConstraintSystem::new_ref();
 
@@ -69,13 +67,12 @@ where
     }
 
     fn create_proof_with_assignment<R: RngCore>(
-        pk: &ProvingKey<F, E, PCS>,
+        pk: &ProvingKey<F, E>,
         instance_assignment: &[F],
         witness_assignment: &[F],
         rng: &mut R,
-    ) -> Result<Proof<F, PCS>, PolymathError>
+    ) -> Result<Proof<E>, PolymathError>
     where
-        PCS: UnivariatePCS<F, Transcript = T>,
         T: Transcript<Challenge = F>,
     {
         let z = &[
@@ -120,7 +117,7 @@ where
         let z_j_mul_uj_wj_lcs_by_y_alpha_g1 =
             Self::msm(&witness_assignment.to_vec(), &pk.uj_wj_lcs_by_y_alpha_g1);
 
-        let c_g1 = z_j_mul_uj_wj_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1;
+        let c_g1 = (z_j_mul_uj_wj_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1).into();
 
         let mut t = T::new(B_POLYMATH);
         let x1 = Self::compute_x1(&mut t, instance_assignment, &[a_g1, c_g1])?;
@@ -263,7 +260,7 @@ where
             .collect()
     }
 
-    fn compute_y_vec(pk: &ProvingKey<F, E, PCS>, x: &[F], w: &[F]) -> Vec<F> {
+    fn compute_y_vec(pk: &ProvingKey<F, E>, x: &[F], w: &[F]) -> Vec<F> {
         let zero = F::zero();
         let one = F::one();
         let y_m0: Vec<F> = (1..pk.sap_matrices.num_instance_variables)
@@ -315,20 +312,20 @@ where
     }
 
     fn compute_a_g1(
-        pk: &ProvingKey<F, E, PCS>,
+        pk: &ProvingKey<F, E>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
-    ) -> PCS::Commitment {
+    ) -> E::G1Affine {
         let u_g1 = Self::msm(&u_poly.coeffs, &pk.x_powers_g1);
         let r_a_y_alpha_g1 = Self::msm(&r_a_poly.coeffs, &pk.x_powers_y_alpha_g1);
-        u_g1 + r_a_y_alpha_g1
+        (u_g1 + r_a_y_alpha_g1).into()
     }
 
     fn compute_r_g1(
-        pk: &ProvingKey<F, E, PCS>,
+        pk: &ProvingKey<F, E>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
-    ) -> PCS::Commitment {
+    ) -> E::G1Affine {
         let two = F::one() + F::one();
 
         // r_a is degree 1, so naive mul is cheaper than via FFTs
@@ -340,11 +337,11 @@ where
 
         let r_a_y_gamma_g1 = Self::msm(&r_a_poly.coeffs, &pk.x_powers_y_gamma_g1);
 
-        two_r_a_by_u_g1 + r_a_square_y_alpha_g1 + r_a_y_gamma_g1
+        (two_r_a_by_u_g1 + r_a_square_y_alpha_g1 + r_a_y_gamma_g1).into()
     }
 
     fn compute_r_x_by_y_gamma_poly(
-        pk: &ProvingKey<F, E, PCS>,
+        pk: &ProvingKey<F, E>,
         u_poly: &SparsePolynomial<F>,
         r_a_poly: SparsePolynomial<F>,
     ) -> SparsePolynomial<F> {
@@ -363,35 +360,29 @@ where
         two_r_a_x_u_by_y_gamma_poly + r_a_square_by_y_gamma_minus_alpha_poly + r_a_poly
     }
 
-    fn msm(scalars: &Vec<F>, g1_elems: &Vec<PCS::Commitment>) -> PCS::Commitment {
+    fn msm(scalars: &Vec<F>, g1_elems: &Vec<E::G1Affine>) -> E::G1Affine {
         let (gs, cs): (Vec<_>, Vec<_>) = scalars
             .iter()
             .zip(g1_elems)
             .filter_map(|(&scalar, &g1_elem)| match scalar.is_zero() {
                 true => None,
-                false => Some((
-                    <PCS::Commitment as ScalarMul>::MulBase::from(g1_elem),
-                    scalar,
-                )),
+                false => Some((g1_elem, scalar)),
             })
             .unzip();
-        let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());
-        u_g1
+        let u_g1 = E::G1::msm_unchecked(gs.as_slice(), cs.as_slice());
+        u_g1.into()
     }
 
     // TODO remove if not needed
-    fn sparse_msm(scalars: &Vec<(usize, F)>, g1_elems: &Vec<PCS::Commitment>) -> PCS::Commitment {
-        let (gs, cs): (Vec<_>, Vec<_>) = scalars
-            .iter()
-            .map(|(&(i, scalar))| {
-                let g1_elem = g1_elems[i];
-                (
-                    <PCS::Commitment as ScalarMul>::MulBase::from(g1_elem),
-                    scalar,
-                )
-            })
-            .unzip();
-        let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());
-        u_g1
-    }
+    // fn sparse_msm(scalars: &Vec<(usize, F)>, g1_elems: &Vec<E::G1Affine>) -> E::G1Affine {
+    //     let (gs, cs): (Vec<_>, Vec<_>) = scalars
+    //         .iter()
+    //         .map(|(&(i, scalar))| {
+    //             let g1_elem = g1_elems[i];
+    //             (<E::G1Affine as ScalarMul>::MulBase::from(g1_elem), scalar)
+    //         })
+    //         .unzip();
+    //     let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());
+    //     u_g1
+    // }
 }
