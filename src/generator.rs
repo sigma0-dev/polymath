@@ -134,27 +134,30 @@ where
         })
     }
 
-    fn generate_in_g1<M: Fn(u64) -> F>(max_index: usize, f: M) -> Vec<E::G1Affine> {
+    fn generate_in_g1<M>(max_index: usize, f: M) -> Vec<E::G1Affine>
+    where
+        M: Fn(u64) -> F,
+    {
         (0..max_index + 1)
             .map(|j| (E::G1Affine::generator() * f(j as u64)).into())
             .collect()
     }
 
-    fn polynomials<D: EvaluationDomain<F>, M: Fn(usize, usize) -> F>(
-        domain: &D,
-        m: usize,
-        m_ij: M,
-    ) -> Vec<Vec<F>> {
+    fn polynomials<D, M>(domain: &D, m: usize, m_ij: M) -> Vec<Vec<F>>
+    where
+        D: EvaluationDomain<F>,
+        M: Fn(usize, usize) -> F,
+    {
         (0..m)
             .map(|j| Self::poly_coeff_vec(domain, j, &m_ij))
             .collect()
     }
 
-    fn poly_coeff_vec<D: EvaluationDomain<F>, M: Fn(usize, usize) -> F>(
-        domain: &D,
-        j: usize,
-        m: &M,
-    ) -> Vec<F> {
+    fn poly_coeff_vec<D, M>(domain: &D, j: usize, m: &M) -> Vec<F>
+    where
+        D: EvaluationDomain<F>,
+        M: Fn(usize, usize) -> F,
+    {
         let mut poly_def = (0..domain.size()).map(|i| m(i, j)).collect(); // poly evals
         domain.ifft_in_place(&mut poly_def); // make coeffs from evals
         poly_def
