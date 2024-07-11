@@ -46,10 +46,6 @@ pub struct VerifyingKey<E: Pairing> {
     /// `𝜔` - root of unity, element of the domain group: `X^n - 1 = 0`,
     /// `𝜔^(j·n) = 1` for any `j`
     pub omega: E::ScalarField,
-
-    // TODO remove!!!
-    pub(crate) x: E::ScalarField,
-    pub(crate) z: E::ScalarField,
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,6 +37,8 @@ where
         // compute y1=x1^sigma
         let y1: F = Self::compute_y1(x1, vk.sigma);
 
+        dbg!(y1);
+
         let y1_gamma = Self::neg_power(y1, MINUS_GAMMA);
         let pi_at_x1 = Self::compute_pi_at_x1(vk, public_inputs, x1, y1_gamma);
 
@@ -55,7 +57,7 @@ where
             &[proof.a_g1, proof.c_g1, vk.vk.one_g1],
             &[F::one(), x2, -(proof.a_at_x1 + x2 * c_at_x1)],
         );
-        let x_minus_x1_in_g2 = E::G2::msm_unchecked(&[vk.vk.x_g2, vk.vk.one_g2], &[F::one(), x1]);
+        let x_minus_x1_in_g2 = E::G2::msm_unchecked(&[vk.vk.x_g2, vk.vk.one_g2], &[F::one(), -x1]);
 
         let pairing_output = E::multi_pairing(
             [

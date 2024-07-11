@@ -122,10 +122,6 @@ where
                 m0: m0 as u64,
                 sigma: sigma as u64,
                 omega: domain.group_gen(),
-
-                // TODO remove!!!
-                x,
-                z,
             },
             sap_matrices,
             u_j_polynomials: uj_polynomials,

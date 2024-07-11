@@ -179,7 +179,7 @@ where
         let c_x_by_y_gamma_poly = witness_u_x_by_y_alpha_poly
             + witness_w_x_by_y_alpha_y_gamma_poly
             + h_x_zh_x_by_y_alpha_y_gamma_poly
-            + r_x_by_y_gamma_poly.clone(); // TODO remove `.clone()`
+            + r_x_by_y_gamma_poly;
 
         // compute H(X) = (A(X)·(Y^-𝛾) + x₂·C(X)·(Y^-𝛾)) - (A(x₁)·(Y^-𝛾) - x₂·C(x₁)·(Y^-𝛾))/(X - x₁)
 
@@ -208,7 +208,7 @@ where
 
         // TODO get rid of conversion back and forth - divide sparse poly directly
         let (d_x_by_y_gamma_poly, rem_poly) = DenseOrSparsePolynomial::from(
-            a_x_by_y_gamma_poly.clone() // TODO remove `.clone()`
+            a_x_by_y_gamma_poly
                 + &c_x_by_y_gamma_poly * x2
                 + -a_at_x1_by_y_gamma_poly
                 + -(&c_at_x1_by_y_gamma_poly * x2),
@@ -226,35 +226,6 @@ where
         // compute [d]₁ = [D(X)·z] = [(D(X)·(Y^-𝛾))·(Y^𝛾)·z]₁
 
         let d_g1 = Self::msm(&d_x_by_y_gamma_poly.coeffs, &pk.x_powers_y_gamma_z_g1);
-
-        // TODO remove!!!
-        let x = pk.vk.x;
-        let y = x.pow(&[pk.vk.sigma]);
-        let y_gamma = Self::neg_power(y, MINUS_GAMMA);
-        let y_alpha = Self::neg_power(y, MINUS_ALPHA);
-        debug_assert_eq!(
-            pk.vk.vk.one_g1 * &d_x_by_y_gamma_poly.evaluate(&x) * &y_gamma * &pk.vk.z,
-            d_g1.into()
-        );
-        debug_assert_eq!(
-            pk.vk.vk.one_g1 * &a_x_by_y_gamma_poly.evaluate(&x) * &y_gamma,
-            a_g1.into()
-        );
-        debug_assert_eq!(
-            pk.vk.vk.one_g1 * &r_x_by_y_gamma_poly.evaluate(&x) * &y_gamma,
-            r_g1.into()
-        );
-        debug_assert_eq!(
-            pk.vk.vk.one_g1
-                * &h_poly.evaluate(&x)
-                * domain.evaluate_vanishing_polynomial(x)
-                * &y_alpha.inverse().unwrap(),
-            h_zh_by_y_alpha_g1.into()
-        );
-        debug_assert_eq!(
-            pk.vk.vk.one_g1 * &c_x_by_y_gamma_poly.evaluate(&x) * &y_gamma,
-            c_g1.into()
-        );
 
         Ok(Proof {
             a_g1,
