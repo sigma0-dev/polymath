@@ -49,10 +49,7 @@ where
 
         let prover = cs.borrow().unwrap();
 
-        println!(
-            "instance assignment: {} {}",
-            &prover.instance_assignment[0], &prover.instance_assignment[1]
-        );
+        dbg!(&prover.instance_assignment);
 
         let proof = Self::create_proof_with_assignment(
             pk,
@@ -120,11 +117,11 @@ where
         let c_g1 = (z_j_mul_uj_wj_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1).into();
 
         let mut t = T::new(B_POLYMATH);
-        println!("a_g1: {}", &a_g1);
-        println!("c_g1: {}", &c_g1);
+        dbg!(&a_g1);
+        dbg!(&c_g1);
         let x1 = Self::compute_x1(&mut t, instance_assignment, &[a_g1, c_g1])?;
 
-        println!("prover x1: {}", x1);
+        dbg!(x1);
 
         let y1 = Self::compute_y1(x1, pk.vk.sigma);
 
@@ -138,7 +135,7 @@ where
         // compute c_at_x1
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, a_at_x1, pi_at_x1);
 
-        println!("c_at_x1 {}", c_at_x1);
+        dbg!(c_at_x1);
 
         // compute batch commitment
 
@@ -188,7 +185,7 @@ where
 
         let x2 = Self::compute_x2(&mut t, &x1, &[a_at_x1, c_at_x1])?;
 
-        println!("prover x2: {}", x2);
+        dbg!(x2);
 
         let y_to_minus_gamma_poly = SparsePolynomial::from_coefficients_slice(&[(
             (pk.vk.sigma * MINUS_GAMMA) as usize,
@@ -369,35 +366,9 @@ where
     }
 
     fn msm(scalars: &Vec<F>, g1_elems: &Vec<E::G1Affine>) -> E::G1Affine {
-        println!(
-            "msm: len(scalars) = {}, len(g1_elems) = {}",
-            scalars.len(),
-            g1_elems.len()
-        );
         assert!(scalars.len() <= g1_elems.len());
 
-        let (gs, cs): (Vec<_>, Vec<_>) = scalars
-            .iter()
-            .zip(g1_elems)
-            .filter_map(|(&scalar, &g1_elem)| match scalar.is_zero() {
-                true => None,
-                false => Some((g1_elem, scalar)),
-            })
-            .unzip();
-        let u_g1 = E::G1::msm_unchecked(gs.as_slice(), cs.as_slice());
+        let u_g1 = E::G1::msm_unchecked(g1_elems.as_slice(), scalars.as_slice());
         u_g1.into()
     }
-
-    // TODO remove if not needed
-    // fn sparse_msm(scalars: &Vec<(usize, F)>, g1_elems: &Vec<E::G1Affine>) -> E::G1Affine {
-    //     let (gs, cs): (Vec<_>, Vec<_>) = scalars
-    //         .iter()
-    //         .map(|(&(i, scalar))| {
-    //             let g1_elem = g1_elems[i];
-    //             (<E::G1Affine as ScalarMul>::MulBase::from(g1_elem), scalar)
-    //         })
-    //         .unzip();
-    //     let u_g1 = VariableBaseMSM::msm_unchecked(gs.as_slice(), cs.as_slice());
-    //     u_g1
-    // }
 }

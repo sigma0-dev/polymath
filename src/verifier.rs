@@ -24,15 +24,15 @@ where
 
         let public_inputs = &[&[F::one()], public_inputs].concat();
 
-        println!("public inputs: {} {}", &public_inputs[0], &public_inputs[1]);
+        dbg!(public_inputs);
 
         // compute challenge x1
-        println!("a_g1: {}", &proof.a_g1);
-        println!("c_g1: {}", &proof.c_g1);
+        dbg!(&proof.a_g1);
+        dbg!(&proof.c_g1);
 
         let x1: F = Self::compute_x1(&mut t, public_inputs, &[proof.a_g1, proof.c_g1])?;
 
-        println!("verifier x1: {}", x1);
+        dbg!(x1);
 
         // compute y1=x1^sigma
         let y1: F = Self::compute_y1(x1, vk.sigma);
@@ -45,13 +45,11 @@ where
         // compute c_at_x1
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, proof.a_at_x1, pi_at_x1);
 
-        println!("c_at_x1 {}", c_at_x1);
+        dbg!(c_at_x1);
 
         let x2 = Self::compute_x2(&mut t, &x1, &[proof.a_at_x1, c_at_x1])?;
 
-        println!("verifier x2: {}", x2);
-
-        // TODO compute LCs of commitments and evals
+        dbg!(x2);
 
         let commitments_minus_evals_in_g1 = E::G1::msm_unchecked(
             &[proof.a_g1, proof.c_g1, vk.vk.one_g1],
@@ -70,7 +68,7 @@ where
             ],
         );
 
-        println!("pairing output {}", pairing_output);
+        dbg!(pairing_output.0);
 
         Ok(pairing_output.0.is_one())
     }
