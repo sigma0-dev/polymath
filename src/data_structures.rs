@@ -20,8 +20,9 @@ pub struct Proof<E: Pairing> {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Verification key for the pairing check.
 #[derive(Clone, Copy, Debug, CanonicalSerialize, CanonicalDeserialize)]
-pub struct KZGVerifyingKey<E: Pairing> {
+pub struct PairingVK<E: Pairing> {
     /// `[1]₁` - the `G1` group generator.
     pub one_g1: E::G1Affine,
     /// `[1]₂` - the `G2` group generator.
@@ -35,7 +36,8 @@ pub struct KZGVerifyingKey<E: Pairing> {
 /// Verification key in the Polymath zkSNARK.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub struct VerifyingKey<E: Pairing> {
-    pub vk: KZGVerifyingKey<E>,
+    /// Group elements for the pairing check.
+    pub e: PairingVK<E>,
     /// `n` - the domain size. Must be a power of 2.
     pub n: u64,
     /// `m₀` - public input size (doesn't need to be a power of 2).
@@ -54,9 +56,12 @@ pub struct VerifyingKey<E: Pairing> {
 pub struct ProvingKey<E: Pairing> {
     /// The underlying verification key.
     pub vk: VerifyingKey<E>,
+    /// SAP (square arithmetic program) matrices derived from R1CS matrices.
     pub sap_matrices: SAPMatrices<E::ScalarField>,
-    pub u_j_polynomials: Vec<Vec<E::ScalarField>>,
-    pub w_j_polynomials: Vec<Vec<E::ScalarField>>,
+    /// `uⱼ(X)` polynomials as vectors of coefficients.
+    pub uj_polynomials: Vec<Vec<E::ScalarField>>,
+    /// `wⱼ(X)` polynomials as vectors of coefficients.
+    pub wj_polynomials: Vec<Vec<E::ScalarField>>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
     pub x_powers_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.

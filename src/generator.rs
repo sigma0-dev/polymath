@@ -8,12 +8,9 @@ use ark_relations::r1cs::{
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::RngCore;
-use ark_std::Zero;
 
 use crate::common::{MINUS_ALPHA, MINUS_GAMMA};
-use crate::{
-    common, KZGVerifyingKey, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey,
-};
+use crate::{common, PairingVK, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -106,7 +103,7 @@ where
             (uj_poly.evaluate(&x) * &y_gamma + wj_poly.evaluate(&x)) * &y_to_minus_alpha
         });
 
-        let vk = KZGVerifyingKey {
+        let e = PairingVK {
             one_g1: E::G1Affine::generator(),
             one_g2: E::G2Affine::generator(),
             x_g2: (E::G2Affine::generator() * &x).into(),
@@ -117,15 +114,15 @@ where
 
         Ok(ProvingKey {
             vk: VerifyingKey {
-                vk,
+                e,
                 n: n as u64,
                 m0: m0 as u64,
                 sigma: sigma as u64,
                 omega: domain.group_gen(),
             },
             sap_matrices,
-            u_j_polynomials: uj_polynomials,
-            w_j_polynomials: wj_polynomials,
+            uj_polynomials,
+            wj_polynomials,
 
             x_powers_g1,
             x_powers_y_alpha_g1,
@@ -166,14 +163,25 @@ where
     }
 }
 
+/// SAP (square arithmetic program) matrix representation of underlying R1CS.
+/// SAP: `Uz ∘ Uz = Wz`
+/// R1CS: `Az ∘ Bz = Cz`
+/// We are constructing the views into SAP `U` and `W` matrices from R1CS
+/// preserving the constraints encoded in the underlying R1CS.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub struct SAPMatrices<F: Field> {
+    /// Number of public input (a.k.a. instance) variables in the underlying R1CS, including the leading `1`.
     pub num_instance_variables: usize,
+    /// Number of private (a.k.a. witness) variables in the underlying R1CS.
     pub num_r1cs_witness_variables: usize,
+    /// Number of constraints in the underlying R1CS.
     pub num_r1cs_constraints: usize,
 
+    /// R1CS `A` matrix.
     pub a: Vec<Vec<(F, usize)>>,
+    /// R1CS `B` matrix.
     pub b: Vec<Vec<(F, usize)>>,
+    /// R1CS `C` matrix.
     pub c: Vec<Vec<(F, usize)>>,
 }
 
@@ -185,6 +193,7 @@ impl<F: Field> SAPMatrices<F> {
         ((m0 + n) * 2, m0 * 2 + m + n)
     }
 
+    /// Get `Uᵢⱼ` element of the SAP `U` matrix.
     pub fn u(&self, i: usize, j: usize) -> F {
         let (m0, m, n) = self.m0_m_n();
         let (double_m0, double_m0_plus_n, double_m0_plus_double_n, m0_plus_m) =
@@ -221,6 +230,7 @@ impl<F: Field> SAPMatrices<F> {
         }
     }
 
+    /// Get `Wᵢⱼ` element of the SAP `W` matrix.
     pub fn w(&self, i: usize, j: usize) -> F {
         let (m0, m, n) = self.m0_m_n();
         let (double_m0, double_m0_plus_n, double_m0_plus_double_n, m0_plus_m) =
@@ -277,27 +287,3 @@ impl<F: Field> SAPMatrices<F> {
         (m0, m, n)
     }
 }
-
-// mod test {
-//     use ark_bls12_381::{Bls12_381, Fr};
-//     use ark_poly::univariate::DensePolynomial;
-//     use proptest::prelude::*;
-//
-//     use crate::FieldChallengeTranscript;
-//     use crate::pcs::KZG;
-//
-//     use super::*;
-//
-//     type Polymath = crate::Polymath<
-//         Fr,
-//         FieldChallengeTranscript<Fr>,
-//         KZG<Bls12_381, DensePolynomial<Fr>, FieldChallengeTranscript<Fr>>,
-//     >;
-//
-//     proptest! {
-//         #[test]
-//         fn doesnt_crash(s in "\\PC*") {
-//             // parse_date(&s);
-//         }
-//     }
-// }

@@ -26,7 +26,7 @@ use ark_std::test_rng;
 // For randomness (during paramgen and proof generation)
 use ark_std::rand::{Rng, RngCore, SeedableRng};
 
-use sigma0_polymath::transcript::FieldChallengeTranscript;
+use sigma0_polymath::transcript::MerlinFieldTranscript;
 
 const MIMC_ROUNDS: usize = 322;
 
@@ -146,7 +146,7 @@ impl<'a, F: Field> ConstraintSynthesizer<F> for MiMCDemo<'a, F> {
 fn test_mimc_polymath() {
     // We're going to use the Polymath proving system.
 
-    type Polymath = sigma0_polymath::Polymath<Bls12_381, FieldChallengeTranscript<Fr>>;
+    type Polymath = sigma0_polymath::Polymath<Bls12_381, MerlinFieldTranscript<Fr>>;
 
     // This may not be cryptographically safe, use
     // `OsRng` (for example) in production software.

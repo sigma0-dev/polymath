@@ -79,11 +79,11 @@ where
             &Self::compute_y_vec(pk, instance_assignment, witness_assignment),
         ];
 
-        let u_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials, z);
-        let w_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials, z);
+        let uj_x_zj_coeffs = Self::polynomials_mul_by_z_j(&pk.uj_polynomials, z);
+        let wj_x_zj_coeffs = Self::polynomials_mul_by_z_j(&pk.wj_polynomials, z);
 
-        let u_coeffs = Self::sum_vectors(&u_j_x_z_j_coeffs);
-        let w_coeffs = Self::sum_vectors(&w_j_x_z_j_coeffs);
+        let u_coeffs = Self::sum_vectors(&uj_x_zj_coeffs);
+        let w_coeffs = Self::sum_vectors(&wj_x_zj_coeffs);
 
         let u2_coeffs = Self::square_polynomial(&u_coeffs)?;
 
@@ -152,15 +152,15 @@ where
         let r_x_by_y_gamma_poly = Self::compute_r_x_by_y_gamma_poly(pk, &u_poly, r_a_poly);
 
         let m0 = instance_assignment.len();
-        let z_j_u_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials[m0..], &z[1..]);
-        debug_assert_eq!(&z_j_u_j_coeffs[0], &pk.u_j_polynomials[m0]);
-        let z_j_w_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials[m0..], &z[1..]);
-        debug_assert_eq!(&z_j_w_j_coeffs[0], &pk.w_j_polynomials[m0]);
+        let zj_uj_coeffs = Self::polynomials_mul_by_z_j(&pk.uj_polynomials[m0..], &z[1..]);
+        debug_assert_eq!(&zj_uj_coeffs[0], &pk.uj_polynomials[m0]);
+        let zj_wj_coeffs = Self::polynomials_mul_by_z_j(&pk.wj_polynomials[m0..], &z[1..]);
+        debug_assert_eq!(&zj_wj_coeffs[0], &pk.wj_polynomials[m0]);
 
         let witness_u_x_poly =
-            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&z_j_u_j_coeffs));
+            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&zj_uj_coeffs));
         let witness_w_x_poly =
-            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&z_j_w_j_coeffs));
+            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&zj_wj_coeffs));
 
         let witness_u_x_by_y_alpha_poly = Self::mul_by_x_power(
             &SparsePolynomial::from(witness_u_x_poly),
@@ -256,20 +256,6 @@ where
                     .iter()
                     .map(move |&c| c * Self::combined_v_at(z, j))
                     .collect()
-            })
-            .collect()
-    }
-
-    fn poly_mul_by(poly: &[F], s: F) -> Vec<F> {
-        poly.iter().map(|&v| v * s).collect()
-    }
-
-    fn evals<M: Fn(usize, usize) -> F>(n: usize, m: usize, m_at: M, z: &[&[F]]) -> Vec<F> {
-        (0..n)
-            .map(|i| {
-                (0..m)
-                    .map(|j| m_at(i, j) * Self::combined_v_at(z, j))
-                    .fold(F::zero(), |x, y| x + y)
             })
             .collect()
     }

@@ -101,12 +101,13 @@ where
 {
 }
 
+/// Error types for Polymath.
 #[derive(thiserror::Error, Debug)]
 pub enum PolymathError {
+    /// Wraps `SynthesisError`.
     #[error(transparent)]
     SynthesisError(#[from] SynthesisError),
+    /// Wraps `SerializationError`.
     #[error(transparent)]
     SerializationError(#[from] SerializationError),
-    // #[error(transparent)]
-    // PCSError(#[from] PCSError),
 }
