@@ -24,20 +24,11 @@ where
 
         let public_inputs = &[&[F::one()], public_inputs].concat();
 
-        dbg!(public_inputs);
-
         // compute challenge x1
-        dbg!(&proof.a_g1);
-        dbg!(&proof.c_g1);
-
         let x1: F = Self::compute_x1(&mut t, public_inputs, &[proof.a_g1, proof.c_g1])?;
-
-        dbg!(x1);
 
         // compute y1=x1^sigma
         let y1: F = Self::compute_y1(x1, vk.sigma);
-
-        dbg!(y1);
 
         let y1_gamma = Self::neg_power(y1, MINUS_GAMMA);
         let pi_at_x1 = Self::compute_pi_at_x1(vk, public_inputs, x1, y1_gamma);
@@ -47,11 +38,7 @@ where
         // compute c_at_x1
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, proof.a_at_x1, pi_at_x1);
 
-        dbg!(c_at_x1);
-
         let x2 = Self::compute_x2(&mut t, &x1, &[proof.a_at_x1, c_at_x1])?;
-
-        dbg!(x2);
 
         let commitments_minus_evals_in_g1 = E::G1::msm_unchecked(
             &[proof.a_g1, proof.c_g1, vk.e.one_g1],
@@ -69,8 +56,6 @@ where
                 <E::G2 as Into<E::G2Prepared>>::into(x_minus_x1_in_g2),
             ],
         );
-
-        dbg!(pairing_output.0);
 
         Ok(pairing_output.0.is_one())
     }

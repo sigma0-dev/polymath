@@ -71,10 +71,9 @@ where
         let sigma = n + 3;
 
         let x: F = domain.sample_element_outside_domain(rng);
-        let y: F = dbg!(x).pow([sigma as u64]);
+        let y: F = x.pow([sigma as u64]);
         let y_alpha = y.inverse().unwrap().pow([MINUS_ALPHA]);
         let y_to_minus_alpha = y.pow([MINUS_ALPHA]);
-        debug_assert_eq!(dbg!(y_alpha) * dbg!(y_to_minus_alpha), F::one());
         let y_gamma = y.inverse().unwrap().pow([MINUS_GAMMA]);
         let z: F = domain.sample_element_outside_domain(rng);
 

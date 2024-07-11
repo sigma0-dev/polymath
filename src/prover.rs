@@ -49,8 +49,6 @@ where
 
         let prover = cs.borrow().unwrap();
 
-        dbg!(&prover.instance_assignment);
-
         let proof = Self::create_proof_with_assignment(
             pk,
             &prover.instance_assignment,
@@ -117,11 +115,7 @@ where
         let c_g1 = (zj_mul_uj_wj_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1).into();
 
         let mut t = T::new(B_POLYMATH);
-        dbg!(&a_g1);
-        dbg!(&c_g1);
         let x1 = Self::compute_x1(&mut t, instance_assignment, &[a_g1, c_g1])?;
-
-        dbg!(x1);
 
         let y1 = Self::compute_y1(x1, pk.vk.sigma);
 
@@ -185,8 +179,6 @@ where
 
         let x2 = Self::compute_x2(&mut t, &x1, &[a_at_x1, c_at_x1])?;
 
-        dbg!(x2);
-
         let y_to_minus_gamma_poly = SparsePolynomial::from_coefficients_slice(&[(
             (pk.vk.sigma * MINUS_GAMMA) as usize,
             F::one(),
@@ -197,12 +189,12 @@ where
 
         debug_assert_eq!(
             dbg!(a_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
-            dbg!(a_at_x1)
+            a_at_x1
         );
         debug_assert_eq!(dbg!(a_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), a_at_x1);
         debug_assert_eq!(
             dbg!(c_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
-            dbg!(c_at_x1)
+            c_at_x1
         );
         debug_assert_eq!(dbg!(c_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), c_at_x1);
 
@@ -219,8 +211,8 @@ where
         .unwrap();
         assert!(rem_poly.is_zero());
         assert!(
-            dbg!(d_x_by_y_gamma_poly.degree())
-                <= dbg!(2 * (n - 1) + (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize)
+            d_x_by_y_gamma_poly.degree()
+                <= 2 * (n - 1) + (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize
         );
 
         // compute [d]₁ = [D(X)·z] = [(D(X)·(Y^-𝛾))·(Y^𝛾)·z]₁
@@ -296,14 +288,14 @@ where
         unreachable!()
     }
 
-    fn square_polynomial(p_coeffs: &Vec<F>) -> Result<Vec<F>, PolymathError> {
+    fn square_polynomial(p_coeffs: &[F]) -> Result<Vec<F>, PolymathError> {
         let squaring_domain: D<F> =
             D::new(p_coeffs.len() * 2).ok_or(SynthesisError::PolynomialDegreeTooLarge)?;
 
-        let mut u = squaring_domain.fft(p_coeffs);
+        let mut u = squaring_domain.fft(p_coeffs); // u is a vector of evaluations
 
-        for i in 0..u.len() {
-            u[i] = u[i] * u[i];
+        for ui in &mut u {
+            *ui *= *ui;
         }
 
         squaring_domain.ifft_in_place(&mut u); // u is now a coeffs vector
