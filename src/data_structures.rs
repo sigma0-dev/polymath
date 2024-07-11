@@ -46,6 +46,10 @@ pub struct VerifyingKey<E: Pairing> {
     /// `𝜔` - root of unity, element of the domain group: `X^n - 1 = 0`,
     /// `𝜔^(j·n) = 1` for any `j`
     pub omega: E::ScalarField,
+
+    // TODO remove!!!
+    pub(crate) x: E::ScalarField,
+    pub(crate) z: E::ScalarField,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,5 +74,4 @@ pub struct ProvingKey<E: Pairing> {
     pub x_powers_y_gamma_z_g1: Vec<E::G1Affine>,
     /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ| j = i + m₀, i ∈ [0, m-m₀)]₁` - linear combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1` for indices of the witness vector.
     pub uj_wj_lcs_by_y_alpha_g1: Vec<E::G1Affine>,
-    // TODO there's more
 }
