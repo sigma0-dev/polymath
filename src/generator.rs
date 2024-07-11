@@ -74,9 +74,10 @@ where
         let sigma = n + 3;
 
         let x: F = domain.sample_element_outside_domain(rng);
-        let y: F = x.pow(&[sigma as u64]);
+        let y: F = dbg!(x).pow(&[sigma as u64]);
         let y_alpha = y.inverse().unwrap().pow(&[MINUS_ALPHA]);
         let y_to_minus_alpha = y.pow(&[MINUS_ALPHA]);
+        debug_assert_eq!(dbg!(y_alpha) * dbg!(y_to_minus_alpha), F::one());
         let y_gamma = y.inverse().unwrap().pow(&[MINUS_GAMMA]);
         let z: F = domain.sample_element_outside_domain(rng);
 
@@ -96,8 +97,10 @@ where
         });
 
         let uj_wj_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0 - 1, |j| {
-            let u_j_poly = DensePolynomial::from_coefficients_slice(&u_j_polynomials[j as usize]);
-            let w_j_poly = DensePolynomial::from_coefficients_slice(&w_j_polynomials[j as usize]);
+            let u_j_poly =
+                DensePolynomial::from_coefficients_slice(&u_j_polynomials[j as usize + m0]);
+            let w_j_poly =
+                DensePolynomial::from_coefficients_slice(&w_j_polynomials[j as usize + m0]);
             (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
         });
 

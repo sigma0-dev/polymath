@@ -135,8 +135,6 @@ where
         // compute c_at_x1
         let c_at_x1 = Self::compute_c_at_x1(y1_gamma, y1_alpha, a_at_x1, pi_at_x1);
 
-        dbg!(c_at_x1);
-
         // compute batch commitment
 
         let u_poly = SparsePolynomial::from(u_poly);
@@ -154,13 +152,15 @@ where
         let r_x_by_y_gamma_poly = Self::compute_r_x_by_y_gamma_poly(pk, &u_poly, r_a_poly);
 
         let m0 = instance_assignment.len();
-        let u_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials[m0..], &z[1..]);
-        let w_j_x_z_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials[m0..], &z[1..]);
+        let z_j_u_j_coeffs = Self::polynomials_mul_by_z_j(&pk.u_j_polynomials[m0..], &z[1..]);
+        debug_assert_eq!(&z_j_u_j_coeffs[0], &pk.u_j_polynomials[m0]);
+        let z_j_w_j_coeffs = Self::polynomials_mul_by_z_j(&pk.w_j_polynomials[m0..], &z[1..]);
+        debug_assert_eq!(&z_j_w_j_coeffs[0], &pk.w_j_polynomials[m0]);
 
         let witness_u_x_poly =
-            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&u_j_x_z_j_coeffs));
+            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&z_j_u_j_coeffs));
         let witness_w_x_poly =
-            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&w_j_x_z_j_coeffs));
+            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&z_j_w_j_coeffs));
 
         let witness_u_x_by_y_alpha_poly = Self::mul_by_x_power(
             &SparsePolynomial::from(witness_u_x_poly),
@@ -195,6 +195,17 @@ where
         let a_at_x1_by_y_gamma_poly = &y_to_minus_gamma_poly * a_at_x1;
         let c_at_x1_by_y_gamma_poly = &y_to_minus_gamma_poly * c_at_x1;
 
+        debug_assert_eq!(
+            dbg!(a_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
+            dbg!(a_at_x1)
+        );
+        debug_assert_eq!(dbg!(a_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), a_at_x1);
+        debug_assert_eq!(
+            dbg!(c_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
+            dbg!(c_at_x1)
+        );
+        debug_assert_eq!(dbg!(c_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), c_at_x1);
+
         // TODO get rid of conversion back and forth - divide sparse poly directly
         let (d_x_by_y_gamma_poly, rem_poly) = DenseOrSparsePolynomial::from(
             a_x_by_y_gamma_poly
@@ -208,8 +219,8 @@ where
         .unwrap();
         assert!(rem_poly.is_zero());
         assert!(
-            d_x_by_y_gamma_poly.degree()
-                <= 2 * (n - 1) + (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize
+            dbg!(d_x_by_y_gamma_poly.degree())
+                <= dbg!(2 * (n - 1) + (pk.vk.sigma * (MINUS_ALPHA + MINUS_GAMMA)) as usize)
         );
 
         // compute [d]₁ = [D(X)·z] = [(D(X)·(Y^-𝛾))·(Y^𝛾)·z]₁
@@ -245,7 +256,7 @@ where
             .map(|(&ref p_coeffs, j)| {
                 p_coeffs
                     .iter()
-                    .map(move |&v| v * Self::combined_v_at(z, j))
+                    .map(move |&c| c * Self::combined_v_at(z, j))
                     .collect()
             })
             .collect()
