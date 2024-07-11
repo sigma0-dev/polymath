@@ -58,17 +58,17 @@ where
 
         let domain_time = start_timer!(|| "Constructing evaluation domain");
 
-        let (n, m) = sap_matrices.size(); // (rows, columns) in U and W matrices
-        let num_constraints = n; // unaligned to powers of 2
+        let (num_constraints, num_columns) = sap_matrices.size(); // (rows, columns) in U and W matrices
         let domain = D::new(num_constraints).ok_or(SynthesisError::PolynomialDegreeTooLarge)?;
 
         end_timer!(domain_time);
         ///////////////////////////////////////////////////////////////////////////
 
-        let u_j_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.u(i, j));
-        let w_j_polynomials = Self::polynomials(&domain, m, |i, j| sap_matrices.w(i, j));
+        let uj_polynomials = Self::polynomials(&domain, num_columns, |i, j| sap_matrices.u(i, j));
+        let wj_polynomials = Self::polynomials(&domain, num_columns, |i, j| sap_matrices.w(i, j));
 
         let n = domain.size(); // a power of 2
+        let m = num_columns;
         let m0 = cs.num_instance_variables();
         let bnd_a: usize = 1;
         let sigma = n + 3;
@@ -85,30 +85,32 @@ where
 
         let x_powers_y_alpha_g1 = Self::generate_in_g1(2 * bnd_a, |j| x.pow(&[j]) * y_alpha);
 
-        let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a, |j| x.pow(&[j]) * y_gamma);
+        let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a, |j| x.pow(&[j]) * &y_gamma);
 
-        let d_x_by_y_gamma_max_degree =
-            2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize);
-        let x_powers_y_gamma_z_g1 =
-            Self::generate_in_g1(d_x_by_y_gamma_max_degree, |j| x.pow(&[j]) * y_gamma * z);
+        let x_powers_y_gamma_z_g1 = {
+            let d_x_by_y_gamma_max_degree =
+                2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize);
+            Self::generate_in_g1(d_x_by_y_gamma_max_degree, |j| x.pow(&[j]) * &y_gamma * &z)
+        };
 
-        let x_powers_zh_by_y_alpha_g1 = Self::generate_in_g1(n - 2, |j| {
-            x.pow(&[j]) * domain.evaluate_vanishing_polynomial(x) * y_to_minus_alpha
-        });
+        let x_powers_zh_by_y_alpha_g1 = {
+            let zh_at_x = domain.evaluate_vanishing_polynomial(x);
+            Self::generate_in_g1(n - 2, |j| x.pow(&[j]) * &zh_at_x * &y_to_minus_alpha)
+        };
 
         let uj_wj_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0 - 1, |j| {
-            let u_j_poly =
-                DensePolynomial::from_coefficients_slice(&u_j_polynomials[j as usize + m0]);
-            let w_j_poly =
-                DensePolynomial::from_coefficients_slice(&w_j_polynomials[j as usize + m0]);
-            (u_j_poly.evaluate(&x) * y_gamma + w_j_poly.evaluate(&x)) * y_to_minus_alpha
+            let uj_poly =
+                DensePolynomial::from_coefficients_slice(&uj_polynomials[j as usize + m0]);
+            let wj_poly =
+                DensePolynomial::from_coefficients_slice(&wj_polynomials[j as usize + m0]);
+            (uj_poly.evaluate(&x) * &y_gamma + wj_poly.evaluate(&x)) * &y_to_minus_alpha
         });
 
         let vk = KZGVerifyingKey {
             one_g1: E::G1Affine::generator(),
             one_g2: E::G2Affine::generator(),
-            x_g2: (E::G2Affine::generator() * x).into(),
-            z_g2: (E::G2Affine::generator() * z).into(),
+            x_g2: (E::G2Affine::generator() * &x).into(),
+            z_g2: (E::G2Affine::generator() * &z).into(),
         };
 
         end_timer!(setup_time);
@@ -122,8 +124,8 @@ where
                 omega: domain.group_gen(),
             },
             sap_matrices,
-            u_j_polynomials,
-            w_j_polynomials,
+            u_j_polynomials: uj_polynomials,
+            w_j_polynomials: wj_polynomials,
 
             x_powers_g1,
             x_powers_y_alpha_g1,
