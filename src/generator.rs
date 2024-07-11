@@ -74,28 +74,28 @@ where
         let sigma = n + 3;
 
         let x: F = domain.sample_element_outside_domain(rng);
-        let y: F = dbg!(x).pow(&[sigma as u64]);
-        let y_alpha = y.inverse().unwrap().pow(&[MINUS_ALPHA]);
-        let y_to_minus_alpha = y.pow(&[MINUS_ALPHA]);
+        let y: F = dbg!(x).pow([sigma as u64]);
+        let y_alpha = y.inverse().unwrap().pow([MINUS_ALPHA]);
+        let y_to_minus_alpha = y.pow([MINUS_ALPHA]);
         debug_assert_eq!(dbg!(y_alpha) * dbg!(y_to_minus_alpha), F::one());
-        let y_gamma = y.inverse().unwrap().pow(&[MINUS_GAMMA]);
+        let y_gamma = y.inverse().unwrap().pow([MINUS_GAMMA]);
         let z: F = domain.sample_element_outside_domain(rng);
 
-        let x_powers_g1 = Self::generate_in_g1(n + bnd_a - 1, |j| x.pow(&[j]));
+        let x_powers_g1 = Self::generate_in_g1(n + bnd_a - 1, |j| x.pow([j]));
 
-        let x_powers_y_alpha_g1 = Self::generate_in_g1(2 * bnd_a, |j| x.pow(&[j]) * y_alpha);
+        let x_powers_y_alpha_g1 = Self::generate_in_g1(2 * bnd_a, |j| x.pow([j]) * y_alpha);
 
-        let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a, |j| x.pow(&[j]) * &y_gamma);
+        let x_powers_y_gamma_g1 = Self::generate_in_g1(bnd_a, |j| x.pow([j]) * &y_gamma);
 
         let x_powers_y_gamma_z_g1 = {
             let d_x_by_y_gamma_max_degree =
                 2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize);
-            Self::generate_in_g1(d_x_by_y_gamma_max_degree, |j| x.pow(&[j]) * &y_gamma * &z)
+            Self::generate_in_g1(d_x_by_y_gamma_max_degree, |j| x.pow([j]) * &y_gamma * &z)
         };
 
         let x_powers_zh_by_y_alpha_g1 = {
             let zh_at_x = domain.evaluate_vanishing_polynomial(x);
-            Self::generate_in_g1(n - 2, |j| x.pow(&[j]) * &zh_at_x * &y_to_minus_alpha)
+            Self::generate_in_g1(n - 2, |j| x.pow([j]) * &zh_at_x * &y_to_minus_alpha)
         };
 
         let uj_wj_lcs_by_y_alpha_g1 = Self::generate_in_g1(m - m0 - 1, |j| {

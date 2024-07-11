@@ -17,13 +17,12 @@ use std::time::{Duration, Instant};
 use ark_bls12_381::{Bls12_381, Fr};
 use ark_crypto_primitives::snark::{CircuitSpecificSetupSNARK, SNARK};
 use ark_ff::Field;
-use ark_poly::univariate::DensePolynomial;
 // We'll use these interfaces to construct our circuit.
 use ark_relations::{
     lc, ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError, Variable},
 };
-use ark_std::{test_rng, One};
+use ark_std::test_rng;
 // For randomness (during paramgen and proof generation)
 use ark_std::rand::{Rng, RngCore, SeedableRng};
 

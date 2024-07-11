@@ -6,7 +6,7 @@ use ark_std::{One, Zero};
 
 use crate::{to_bytes, Polymath, PolymathError, Transcript, VerifyingKey};
 
-pub const B_POLYMATH: &'static [u8; 8] = b"polymath";
+pub const B_POLYMATH: &[u8; 8] = b"polymath";
 
 /// `𝛼` is negative, we use it as an exponent of `y`: `y^𝛼 = (1/y)^(-𝛼)`
 pub const MINUS_ALPHA: u64 = 3;

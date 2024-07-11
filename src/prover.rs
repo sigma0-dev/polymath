@@ -1,7 +1,7 @@
 use std::ops::Mul;
 
 use ark_ec::pairing::Pairing;
-use ark_ec::{ScalarMul, VariableBaseMSM};
+use ark_ec::VariableBaseMSM;
 use ark_ff::PrimeField;
 use ark_poly::univariate::{DenseOrSparsePolynomial, DensePolynomial, SparsePolynomial};
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
@@ -104,7 +104,7 @@ where
         let r_a_poly = DensePolynomial::from_coefficients_vec(vec![F::rand(rng), F::rand(rng)]);
         assert!(r_a_poly.degree() <= 1);
 
-        assert!(u_poly.degree() <= n - 1);
+        assert!(u_poly.degree() < n);
         let a_g1 = Self::compute_a_g1(pk, &u_poly, &r_a_poly);
 
         let r_g1 = Self::compute_r_g1(pk, &u_poly, &r_a_poly);
@@ -237,9 +237,7 @@ where
 
     fn mul_by_x_power(poly: &SparsePolynomial<F>, power_of_x: usize) -> SparsePolynomial<F> {
         SparsePolynomial::from_coefficients_vec(
-            poly.iter()
-                .map(|(i, c)| (i + power_of_x, c.clone()))
-                .collect(),
+            poly.iter().map(|(i, c)| (i + power_of_x, *c)).collect(),
         )
     }
 
@@ -253,7 +251,7 @@ where
         polynomials
             .iter()
             .zip(0..)
-            .map(|(&ref p_coeffs, j)| {
+            .map(|(p_coeffs, j)| {
                 p_coeffs
                     .iter()
                     .map(move |&c| c * Self::combined_v_at(z, j))
@@ -298,7 +296,7 @@ where
                 v * v
             })
             .collect();
-        vec![vec![F::zero()], y_m0, y_n].concat()
+        [vec![F::zero()], y_m0, y_n].concat()
     }
 
     fn combined_v_at(vectors: &[&[F]], j: usize) -> F {

@@ -1,8 +1,7 @@
 use ark_ec::pairing::Pairing;
 use std::fmt::Debug;
-use std::hash::Hash;
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Valid};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
 use crate::generator::SAPMatrices;
 

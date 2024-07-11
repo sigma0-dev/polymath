@@ -1,7 +1,7 @@
-use ark_ec::pairing::{Pairing, PairingOutput};
-use ark_ec::{AffineRepr, PrimeGroup, VariableBaseMSM};
+use ark_ec::pairing::Pairing;
+use ark_ec::VariableBaseMSM;
 use ark_ff::PrimeField;
-use ark_std::{One, Zero};
+use ark_std::One;
 
 use crate::common::{B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
 use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
@@ -66,7 +66,7 @@ where
             ],
             [
                 <E::G2 as Into<E::G2Prepared>>::into(vk.vk.z_g2.into()),
-                <E::G2 as Into<E::G2Prepared>>::into(x_minus_x1_in_g2).into(),
+                <E::G2 as Into<E::G2Prepared>>::into(x_minus_x1_in_g2),
             ],
         );
 
