@@ -30,15 +30,8 @@ where
         Ok(t.challenge(b"x1"))
     }
 
-    pub(crate) fn compute_x2(
-        t: &mut T,
-        commitments: &[E::G1Affine],
-        point: &F,
-        values: &[F],
-    ) -> Result<F, PolymathError> {
-        t.append_message(b"commitments", &to_bytes!(commitments)?);
-
-        t.append_message(b"point", &to_bytes!(point)?);
+    pub(crate) fn compute_x2(t: &mut T, x1: &F, values: &[F]) -> Result<F, PolymathError> {
+        t.append_message(b"x1", &to_bytes!(x1)?);
         t.append_message(b"values", &to_bytes!(values)?);
 
         Ok(t.challenge(b"x2"))

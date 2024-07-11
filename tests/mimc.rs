@@ -203,7 +203,7 @@ fn test_mimc_polymath() {
 
             // Create a polymath proof with our parameters.
             let proof = Polymath::prove(&pk, c, &mut rng).unwrap();
-            assert!(Polymath::verify_with_processed_vk(&pvk, &[image], &proof).unwrap());
+            assert!(Polymath::verify(&pvk, &[image], &proof).unwrap());
 
             // proof.write(&mut proof_vec).unwrap();
         }
