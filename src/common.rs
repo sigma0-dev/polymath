@@ -59,8 +59,8 @@ where
         let m0 = public_inputs.len();
 
         for i in 0..m0 * 2 {
-            let lagrange_k_i_at_x1 = lagrange_i_at_x1_numerator / (x1 - omega_exp_i);
-            let to_add = Self::z_tilde_i(public_inputs, i) * lagrange_k_i_at_x1;
+            let lagrange_i_at_x1 = lagrange_i_at_x1_numerator / (x1 - omega_exp_i);
+            let to_add = Self::z_tilde_i(public_inputs, i) * lagrange_i_at_x1;
             lagrange_i_at_x1_numerator *= vk.omega;
             omega_exp_i *= vk.omega;
             sum += to_add;
