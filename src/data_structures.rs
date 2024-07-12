@@ -1,5 +1,5 @@
 use ark_ec::pairing::Pairing;
-use std::fmt::Debug;
+use ark_std::fmt::Debug;
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 

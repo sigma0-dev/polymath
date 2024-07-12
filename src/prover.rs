@@ -1,5 +1,3 @@
-use std::ops::Mul;
-
 use ark_ec::pairing::Pairing;
 use ark_ec::VariableBaseMSM;
 use ark_ff::PrimeField;
@@ -9,6 +7,7 @@ use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
 use ark_std::iterable::Iterable;
+use ark_std::ops::Mul;
 use ark_std::rand::RngCore;
 use ark_std::Zero;
 

@@ -10,7 +10,7 @@
 )]
 
 // For benchmarking
-use std::time::{Duration, Instant};
+use ark_std::time::{Duration, Instant};
 
 // Bring in some tools for using pairing-friendly curves
 // We're going to use the BLS12-381 pairing-friendly elliptic curve.
