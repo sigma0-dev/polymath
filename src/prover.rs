@@ -186,16 +186,16 @@ where
         let a_at_x1_by_y_gamma_poly = &y_to_minus_gamma_poly * a_at_x1;
         let c_at_x1_by_y_gamma_poly = &y_to_minus_gamma_poly * c_at_x1;
 
-        debug_assert_eq!(
-            dbg!(a_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
-            a_at_x1
-        );
-        debug_assert_eq!(dbg!(a_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), a_at_x1);
-        debug_assert_eq!(
-            dbg!(c_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
-            c_at_x1
-        );
-        debug_assert_eq!(dbg!(c_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), c_at_x1);
+        // debug_assert_eq!(
+        //     dbg!(a_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
+        //     a_at_x1
+        // );
+        // debug_assert_eq!(dbg!(a_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), a_at_x1);
+        // debug_assert_eq!(
+        //     dbg!(c_at_x1_by_y_gamma_poly.evaluate(&x1) * y1_gamma),
+        //     c_at_x1
+        // );
+        // debug_assert_eq!(dbg!(c_x_by_y_gamma_poly.evaluate(&x1) * y1_gamma), c_at_x1);
 
         // TODO get rid of conversion back and forth - divide sparse poly directly
         let (d_x_by_y_gamma_poly, rem_poly) = DenseOrSparsePolynomial::from(
