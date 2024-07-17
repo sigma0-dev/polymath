@@ -157,6 +157,8 @@ fn test_mimc_polymath() {
 
     println!("Creating parameters...");
 
+    let start = Instant::now();
+
     // Create parameters for our circuit
     let (pk, vk) = {
         let c = MiMCDemo::<Fr> {
@@ -170,6 +172,11 @@ fn test_mimc_polymath() {
 
     // Prepare the verification key (for proof verification)
     let pvk = Polymath::process_vk(&vk).unwrap();
+
+    let setup_time = start.elapsed();
+    let setup_time =
+        setup_time.subsec_nanos() as f64 / 1_000_000_000f64 + (setup_time.as_secs() as f64);
+    println!("Setup time: {:?} seconds", setup_time);
 
     println!("Creating proofs...");
 
@@ -229,7 +236,7 @@ impl<F: Field> ConstraintSynthesizer<F> for ExampleCircuit<F> {
         let a = cs.new_witness_variable(|| self.a.ok_or(SynthesisError::AssignmentMissing))?;
         let b = cs.new_witness_variable(|| self.b.ok_or(SynthesisError::AssignmentMissing))?;
 
-        let c = self.a.map(|a| self.b.map(|b| a * b)).flatten();
+        let c = self.a.and_then(|a| self.b.map(|b| a * b));
         let c = cs.new_input_variable(|| c.ok_or(SynthesisError::AssignmentMissing))?;
 
         cs.enforce_constraint(lc!() + a, lc!() + b, lc!() + c)

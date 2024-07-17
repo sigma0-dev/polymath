@@ -3,7 +3,7 @@ use ark_std::fmt::Debug;
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
-use crate::generator::SAPMatrices;
+use crate::common::SAPMatrices;
 
 /// Proof in the Polymath zkSNARK.
 #[derive(Clone, Debug, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
@@ -58,10 +58,6 @@ pub struct ProvingKey<E: Pairing> {
     pub vk: VerifyingKey<E>,
     /// SAP (square arithmetic program) matrices derived from R1CS matrices.
     pub sap_matrices: SAPMatrices<E::ScalarField>,
-    /// `uⱼ(X)` polynomials as vectors of coefficients.
-    pub uj_polynomials: Vec<Vec<E::ScalarField>>,
-    /// `wⱼ(X)` polynomials as vectors of coefficients.
-    pub wj_polynomials: Vec<Vec<E::ScalarField>>,
     /// `[(xⁱ)ᵢ]₁` - powers of `x` in `G1`.
     pub x_powers_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.

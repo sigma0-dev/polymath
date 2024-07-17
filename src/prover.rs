@@ -6,10 +6,14 @@ use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2Evaluation
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
+use ark_std::cfg_into_iter;
 use ark_std::iterable::Iterable;
 use ark_std::ops::Mul;
 use ark_std::rand::RngCore;
 use ark_std::Zero;
+
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
 
 use crate::common::{m_at, B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
 use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
@@ -76,21 +80,27 @@ where
             &Self::compute_y_vec(pk, instance_assignment, witness_assignment),
         ];
 
-        let uj_x_zj_coeffs = Self::polynomials_mul_by_z_j(&pk.uj_polynomials, z);
-        let wj_x_zj_coeffs = Self::polynomials_mul_by_z_j(&pk.wj_polynomials, z);
+        let (num_constraints, num_columns) = pk.sap_matrices.size(); // (rows, columns) in U and W matrices
+        let domain = D::new(num_constraints).unwrap();
 
-        let u_coeffs = Self::sum_vectors(&uj_x_zj_coeffs);
-        let w_coeffs = Self::sum_vectors(&wj_x_zj_coeffs);
+        let n = domain.size();
+
+        let uj_poly_evals = Self::poly_evals(n, num_columns, |i, j| pk.sap_matrices.u(i, j));
+        let wj_poly_evals = Self::poly_evals(n, num_columns, |i, j| pk.sap_matrices.w(i, j));
+
+        let uj_x_zj_evals = Self::polynomials_mul_by_z_j(&uj_poly_evals, z);
+        let wj_x_zj_evals = Self::polynomials_mul_by_z_j(&wj_poly_evals, z);
+
+        let u_evals = Self::sum_vectors(&uj_x_zj_evals);
+        let u_coeffs = Self::poly_coeffs(domain, u_evals);
+        let w_evals = Self::sum_vectors(&wj_x_zj_evals);
+        let w_coeffs = Self::poly_coeffs(domain, w_evals);
 
         let u2_coeffs = Self::square_polynomial(&u_coeffs)?;
 
         let u_poly = DensePolynomial::from_coefficients_vec(u_coeffs);
         let u2_poly = DensePolynomial::from_coefficients_vec(u2_coeffs);
         let w_poly = DensePolynomial::from_coefficients_vec(w_coeffs);
-
-        let num_sap_rows = pk.sap_matrices.size().0;
-        let domain = D::new(num_sap_rows).unwrap();
-        let n = domain.size();
 
         let h_numerator_poly = u2_poly + -w_poly;
         let (h_poly, rem_poly) = h_numerator_poly.divide_by_vanishing_poly(domain).unwrap();
@@ -145,15 +155,16 @@ where
         let r_x_by_y_gamma_poly = Self::compute_r_x_by_y_gamma_poly(pk, &u_poly, r_a_poly);
 
         let m0 = instance_assignment.len();
-        let zj_uj_coeffs = Self::polynomials_mul_by_z_j(&pk.uj_polynomials[m0..], &z[1..]);
-        debug_assert_eq!(&zj_uj_coeffs[0], &pk.uj_polynomials[m0]);
-        let zj_wj_coeffs = Self::polynomials_mul_by_z_j(&pk.wj_polynomials[m0..], &z[1..]);
-        debug_assert_eq!(&zj_wj_coeffs[0], &pk.wj_polynomials[m0]);
+        let zj_uj_evals = &uj_x_zj_evals[m0..];
+        let zj_wj_evals = &wj_x_zj_evals[m0..];
 
-        let witness_u_x_poly =
-            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&zj_uj_coeffs));
-        let witness_w_x_poly =
-            DensePolynomial::from_coefficients_vec(Self::sum_vectors(&zj_wj_coeffs));
+        let witness_u_x_evals = Self::sum_vectors(zj_uj_evals);
+        let witness_u_x_coeffs = Self::poly_coeffs(domain, witness_u_x_evals);
+        let witness_u_x_poly = DensePolynomial::from_coefficients_vec(witness_u_x_coeffs);
+
+        let witness_w_x_evals = Self::sum_vectors(zj_wj_evals);
+        let witness_w_x_coeffs = Self::poly_coeffs(domain, witness_w_x_evals);
+        let witness_w_x_poly = DensePolynomial::from_coefficients_vec(witness_w_x_coeffs);
 
         let witness_u_x_by_y_alpha_poly = Self::mul_by_x_power(
             &SparsePolynomial::from(witness_u_x_poly),
@@ -226,13 +237,28 @@ where
         })
     }
 
+    fn poly_coeffs<D: EvaluationDomain<F>>(domain: D, evals: Vec<F>) -> Vec<F> {
+        let mut result = evals;
+        domain.ifft_in_place(&mut result);
+        result
+    }
+
+    fn poly_evals<M>(n: usize, m: usize, m_ij: M) -> Vec<Vec<F>>
+    where
+        M: Fn(usize, usize) -> F + Sync,
+    {
+        cfg_into_iter!(0..m)
+            .map(|j| cfg_into_iter!(0..n).map(|i| m_ij(i, j)).collect())
+            .collect()
+    }
+
     fn mul_by_x_power(poly: &SparsePolynomial<F>, power_of_x: usize) -> SparsePolynomial<F> {
         SparsePolynomial::from_coefficients_vec(
             poly.iter().map(|(i, c)| (i + power_of_x, *c)).collect(),
         )
     }
 
-    fn sum_vectors(vs: &Vec<Vec<F>>) -> Vec<F> {
+    fn sum_vectors(vs: &[Vec<F>]) -> Vec<F> {
         vs.iter().fold(vec![F::zero(); vs[0].len()], |a, b| {
             a.into_iter().zip(b).map(|(a, b)| a + b).collect()
         })
