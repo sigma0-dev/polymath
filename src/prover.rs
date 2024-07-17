@@ -121,10 +121,10 @@ where
         let zj_mul_uj_wj_lcs_by_y_alpha_g1 =
             Self::msm(&z[1..].concat(), &pk.uj_wj_lcs_by_y_alpha_g1);
 
-        let c_g1 = (zj_mul_uj_wj_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1).into();
+        let c_g1 = zj_mul_uj_wj_lcs_by_y_alpha_g1 + h_zh_by_y_alpha_g1 + r_g1;
 
         let mut t = T::new(B_POLYMATH);
-        let x1 = Self::compute_x1(&mut t, instance_assignment, &[a_g1, c_g1])?;
+        let x1 = Self::compute_x1(&mut t, instance_assignment, &[a_g1.into(), c_g1.into()])?;
 
         let y1 = Self::compute_y1(x1, pk.vk.sigma);
 
@@ -230,10 +230,10 @@ where
         let d_g1 = Self::msm(&d_x_by_y_gamma_poly.coeffs, &pk.x_powers_y_gamma_z_g1);
 
         Ok(Proof {
-            a_g1,
-            c_g1,
+            a_g1: a_g1.into(),
+            c_g1: c_g1.into(),
             a_at_x1,
-            d_g1,
+            d_g1: d_g1.into(),
         })
     }
 
@@ -332,17 +332,17 @@ where
         pk: &ProvingKey<E>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
-    ) -> E::G1Affine {
+    ) -> E::G1 {
         let u_g1 = Self::msm(&u_poly.coeffs, &pk.x_powers_g1);
         let r_a_y_alpha_g1 = Self::msm(&r_a_poly.coeffs, &pk.x_powers_y_alpha_g1);
-        (u_g1 + r_a_y_alpha_g1).into()
+        u_g1 + r_a_y_alpha_g1
     }
 
     fn compute_r_g1(
         pk: &ProvingKey<E>,
         u_poly: &DensePolynomial<F>,
         r_a_poly: &DensePolynomial<F>,
-    ) -> E::G1Affine {
+    ) -> E::G1 {
         let two = F::one() + F::one();
 
         // r_a is degree 1, so naive mul is cheaper than via FFTs
@@ -354,7 +354,7 @@ where
 
         let r_a_y_gamma_g1 = Self::msm(&r_a_poly.coeffs, &pk.x_powers_y_gamma_g1);
 
-        (two_r_a_by_u_g1 + r_a_square_y_alpha_g1 + r_a_y_gamma_g1).into()
+        two_r_a_by_u_g1 + r_a_square_y_alpha_g1 + r_a_y_gamma_g1
     }
 
     fn compute_r_x_by_y_gamma_poly(
@@ -377,10 +377,10 @@ where
         two_r_a_x_u_by_y_gamma_poly + r_a_square_by_y_gamma_minus_alpha_poly + r_a_poly
     }
 
-    fn msm(scalars: &Vec<F>, g1_elems: &Vec<E::G1Affine>) -> E::G1Affine {
+    #[inline]
+    fn msm(scalars: &Vec<F>, g1_elems: &Vec<E::G1Affine>) -> E::G1 {
         assert!(scalars.len() <= g1_elems.len());
 
-        let u_g1 = E::G1::msm_unchecked(g1_elems.as_slice(), scalars.as_slice());
-        u_g1.into()
+        E::G1::msm_unchecked(g1_elems.as_slice(), scalars.as_slice())
     }
 }
