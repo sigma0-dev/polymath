@@ -1,18 +1,18 @@
-use ark_ec::pairing::Pairing;
-use ark_ec::{CurveGroup, PrimeGroup};
+use ark_ec::{pairing::Pairing, CurveGroup, PrimeGroup};
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
-use ark_std::cfg_into_iter;
-use ark_std::rand::RngCore;
+use ark_std::{cfg_into_iter, rand::RngCore};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
-use crate::common::{SAPMatrices, MINUS_ALPHA, MINUS_GAMMA};
-use crate::{PairingVK, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
+use crate::{
+    common::{SAPMatrices, MINUS_ALPHA, MINUS_GAMMA},
+    PairingVK, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey,
+};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -178,8 +178,8 @@ where
     //         D: EvaluationDomain<F> + Sync,
     //         M: Fn(usize, usize) -> F + Sync,
     //     {
-    //         let mut poly_def = (0..domain.size()).map(|i| m(i, j)).collect(); // poly evals
-    //         domain.ifft_in_place(&mut poly_def); // make coeffs from evals
-    //         poly_def
+    //         let mut poly_def = (0..domain.size()).map(|i| m(i, j)).collect(); //
+    // poly evals         domain.ifft_in_place(&mut poly_def); // make coeffs
+    // from evals         poly_def
     //     }
 }

@@ -1,8 +1,7 @@
 //! A simplified version of `flexible-transcript`.
 
 use ark_ff::Field;
-use ark_std::convert::AsRef;
-use ark_std::marker::PhantomData;
+use ark_std::{convert::AsRef, marker::PhantomData};
 
 /// Transcript to produce Fiat-Shamir challenges.
 pub trait Transcript: Send + Clone {
@@ -19,7 +18,8 @@ pub trait Transcript: Send + Clone {
     fn challenge(&mut self, label: &'static [u8]) -> Self::Challenge;
 }
 
-/// Transcript implementation producing field values as challenges using `merlin::Transcript`.
+/// Transcript implementation producing field values as challenges using
+/// `merlin::Transcript`.
 #[derive(Clone)]
 pub struct MerlinFieldTranscript<F: Field> {
     /// The underlying `merlin` transcript implementation.

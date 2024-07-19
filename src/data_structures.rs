@@ -62,12 +62,15 @@ pub struct ProvingKey<E: Pairing> {
     pub x_powers_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛼)ᵢ]₁` - powers of `x` multiplied by `y^𝛼` in `G1`.
     pub x_powers_y_alpha_g1: Vec<E::G1Affine>,
-    /// `[(xⁱ·Z_H(x)/(y^𝛼))ᵢ]₁` - powers of `x` multiplied by `Z_H(x)/(y^𝛼)` in `G1`.
+    /// `[(xⁱ·Z_H(x)/(y^𝛼))ᵢ]₁` - powers of `x` multiplied by `Z_H(x)/(y^𝛼)` in
+    /// `G1`.
     pub x_powers_zh_by_y_alpha_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛾)ᵢ]₁` - powers of `x` multiplied by `y^𝛾` in `G1`.
     pub x_powers_y_gamma_g1: Vec<E::G1Affine>,
     /// `[(xⁱ·y^𝛾·z)ᵢ]₁` - powers of `x` multiplied by `y^𝛾·z` in `G1`.
     pub x_powers_y_gamma_z_g1: Vec<E::G1Affine>,
-    /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ| j = i + m₀, i ∈ [0, m-m₀)]₁` - linear combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1` for indices of the witness vector.
+    /// `[((uⱼ(x)·y^𝛾 + wⱼ(x))/y^𝛼)ⱼ| j = i + m₀, i ∈ [0, m-m₀)]₁` - linear
+    /// combinations of `uⱼ(x)` and `wⱼ(x)` divided by `y^𝛼` in `G1` for indices
+    /// of the witness vector.
     pub uj_wj_lcs_by_y_alpha_g1: Vec<E::G1Affine>,
 }

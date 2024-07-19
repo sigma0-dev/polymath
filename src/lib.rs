@@ -20,11 +20,9 @@ use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, SynthesisError};
 use ark_serialize::SerializationError;
-use ark_std::marker::PhantomData;
-use ark_std::{clone::Clone, fmt::Debug, rand::RngCore, result::Result};
+use ark_std::{clone::Clone, fmt::Debug, marker::PhantomData, rand::RngCore, result::Result};
 
-pub use self::data_structures::*;
-pub use self::transcript::*;
+pub use self::{data_structures::*, transcript::*};
 
 /// Data structures used by the prover, verifier, and generator.
 pub mod data_structures;

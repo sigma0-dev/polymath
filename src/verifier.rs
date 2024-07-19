@@ -1,10 +1,11 @@
-use ark_ec::pairing::Pairing;
-use ark_ec::VariableBaseMSM;
+use ark_ec::{pairing::Pairing, VariableBaseMSM};
 use ark_ff::PrimeField;
 use ark_std::One;
 
-use crate::common::{B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
-use crate::{Polymath, PolymathError, Transcript, VerifyingKey};
+use crate::{
+    common::{B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA},
+    Polymath, PolymathError, Transcript, VerifyingKey,
+};
 
 use super::Proof;
 
