@@ -1,18 +1,18 @@
-use ark_ec::pairing::Pairing;
-use ark_ec::{CurveGroup, PrimeGroup};
+use ark_ec::{pairing::Pairing, CurveGroup, PrimeGroup};
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
-use ark_std::cfg_into_iter;
-use ark_std::rand::RngCore;
+use ark_std::{cfg_into_iter, rand::RngCore};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
-use crate::common::{SAPMatrices, MINUS_ALPHA, MINUS_GAMMA};
-use crate::{PairingVK, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey};
+use crate::{
+    common::{SAPMatrices, MINUS_ALPHA, MINUS_GAMMA},
+    PairingVK, Polymath, PolymathError, ProvingKey, Transcript, VerifyingKey,
+};
 
 type D<F> = Radix2EvaluationDomain<F>;
 
@@ -32,14 +32,18 @@ where
         cs.set_optimization_goal(OptimizationGoal::Constraints);
         cs.set_mode(SynthesisMode::Setup);
 
+        println!("Constraint synthesis ...");
         // Synthesize the circuit.
         let synthesis_time = start_timer!(|| "Constraint synthesis");
         circuit.generate_constraints(cs.clone())?;
         end_timer!(synthesis_time);
+        println!("Constraint synthesis ... Done.");
 
+        println!("Inlining LCs ...");
         let lc_time = start_timer!(|| "Inlining LCs");
         cs.finalize();
         end_timer!(lc_time);
+        println!("Inlining LCs ... Done.");
 
         ///////////////////////////////////////////////////////////////////////////
 

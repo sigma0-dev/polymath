@@ -84,7 +84,7 @@ where
             i if i < m0 => {
                 let j = i;
                 one + public_inputs[j]
-            }
+            },
 
             i if i == m0 => F::zero(),
 
@@ -92,7 +92,7 @@ where
                 // i > m0
                 let j = i - m0;
                 one - public_inputs[j]
-            }
+            },
         }
     }
 }
@@ -162,12 +162,12 @@ impl<F: Field> SAPMatrices<F> {
             (i, j) if i < double_m0_plus_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0, j - m0);
                 m_at(&self.a, i, j) + m_at(&self.b, i, j)
-            }
+            },
             (i, j) if i < double_m0_plus_double_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0_plus_n, j - m0);
                 m_at(&self.a, i, j) - m_at(&self.b, i, j)
-            }
-            (_, _) => zero,
+            },
+            (..) => zero,
         }
     }
 
@@ -195,14 +195,14 @@ impl<F: Field> SAPMatrices<F> {
             (i, j) if i < double_m0_plus_n && j < m0_plus_m => {
                 let (i, j) = (i - double_m0, j - m0);
                 m_at(&self.c, i, j) * four
-            }
+            },
 
             (i, j) if i < double_m0_plus_n && j == i + m => one,
             (i, _) if i < double_m0_plus_n => zero,
 
             (i, j) if i < double_m0_plus_double_n && j == i - n + m => one,
 
-            (_, _) => zero,
+            (..) => zero,
         }
     }
 

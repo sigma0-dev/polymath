@@ -1,22 +1,21 @@
-use ark_ec::pairing::Pairing;
-use ark_ec::VariableBaseMSM;
+use ark_ec::{pairing::Pairing, VariableBaseMSM};
 use ark_ff::PrimeField;
-use ark_poly::univariate::{DenseOrSparsePolynomial, DensePolynomial, SparsePolynomial};
-use ark_poly::{DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain};
+use ark_poly::{
+    univariate::{DenseOrSparsePolynomial, DensePolynomial, SparsePolynomial},
+    DenseUVPolynomial, EvaluationDomain, Polynomial, Radix2EvaluationDomain,
+};
 use ark_relations::r1cs::{
     ConstraintSynthesizer, ConstraintSystem, OptimizationGoal, SynthesisError, SynthesisMode,
 };
-use ark_std::cfg_into_iter;
-use ark_std::iterable::Iterable;
-use ark_std::ops::Mul;
-use ark_std::rand::RngCore;
-use ark_std::Zero;
+use ark_std::{cfg_into_iter, iterable::Iterable, ops::Mul, rand::RngCore, Zero};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
-use crate::common::{m_at, B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA};
-use crate::{Polymath, PolymathError, Proof, ProvingKey, Transcript};
+use crate::{
+    common::{m_at, B_POLYMATH, MINUS_ALPHA, MINUS_GAMMA},
+    Polymath, PolymathError, Proof, ProvingKey, Transcript,
+};
 
 type D<F> = Radix2EvaluationDomain<F>;
 

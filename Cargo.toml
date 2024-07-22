@@ -47,6 +47,12 @@ parallel = ["std", "ark-ff/parallel", "ark-poly/parallel", "ark-ec/parallel", "a
 r1cs = [ "ark-crypto-primitives/r1cs", "ark-r1cs-std", "tracing", "derivative" ]
 print-trace = [ "ark-std/print-trace" ]
 
+[[bench]]
+name = "polymath-benches"
+path = "benches/bench.rs"
+harness = false
+required-features = ["std"]
+
 [profile.release]
 opt-level = 3
 lto = "thin"
@@ -71,7 +77,6 @@ lto = "thin"
 incremental = true
 debug-assertions = true
 debug = true
-
 
 [patch.crates-io]
 ark-ff = { git = "https://github.com/arkworks-rs/algebra/" }

@@ -1,8 +1,7 @@
 //! A simplified version of `flexible-transcript`.
 
 use ark_ff::Field;
-use ark_std::convert::AsRef;
-use ark_std::marker::PhantomData;
+use ark_std::{convert::AsRef, marker::PhantomData};
 
 /// Transcript to produce Fiat-Shamir challenges.
 pub trait Transcript: Send + Clone {
