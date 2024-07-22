@@ -18,8 +18,7 @@ pub trait Transcript: Send + Clone {
     fn challenge(&mut self, label: &'static [u8]) -> Self::Challenge;
 }
 
-/// Transcript implementation producing field values as challenges using
-/// `merlin::Transcript`.
+/// Transcript implementation producing field values as challenges using `merlin::Transcript`.
 #[derive(Clone)]
 pub struct MerlinFieldTranscript<F: Field> {
     /// The underlying `merlin` transcript implementation.

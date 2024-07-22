@@ -32,14 +32,18 @@ where
         cs.set_optimization_goal(OptimizationGoal::Constraints);
         cs.set_mode(SynthesisMode::Setup);
 
+        println!("Constraint synthesis ...");
         // Synthesize the circuit.
         let synthesis_time = start_timer!(|| "Constraint synthesis");
         circuit.generate_constraints(cs.clone())?;
         end_timer!(synthesis_time);
+        println!("Constraint synthesis ... Done.");
 
+        println!("Inlining LCs ...");
         let lc_time = start_timer!(|| "Inlining LCs");
         cs.finalize();
         end_timer!(lc_time);
+        println!("Inlining LCs ... Done.");
 
         ///////////////////////////////////////////////////////////////////////////
 
@@ -178,8 +182,8 @@ where
     //         D: EvaluationDomain<F> + Sync,
     //         M: Fn(usize, usize) -> F + Sync,
     //     {
-    //         let mut poly_def = (0..domain.size()).map(|i| m(i, j)).collect(); //
-    // poly evals         domain.ifft_in_place(&mut poly_def); // make coeffs
-    // from evals         poly_def
+    //         let mut poly_def = (0..domain.size()).map(|i| m(i, j)).collect(); // poly evals
+    //         domain.ifft_in_place(&mut poly_def); // make coeffs from evals
+    //         poly_def
     //     }
 }

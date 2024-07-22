@@ -111,8 +111,7 @@ pub(crate) fn m_at<F: Field>(m: &Matrix<F>, i: usize, j: usize) -> F {
 /// preserving the constraints encoded in the underlying R1CS.
 #[derive(Clone, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub struct SAPMatrices<F: Field> {
-    /// Number of public input (a.k.a. instance) variables in the underlying
-    /// R1CS, including the leading `1`.
+    /// Number of public input (a.k.a. instance) variables in the underlying R1CS, including the leading `1`.
     pub num_instance_variables: usize,
     /// Number of private (a.k.a. witness) variables in the underlying R1CS.
     pub num_r1cs_witness_variables: usize,

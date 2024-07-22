@@ -1,5 +1,5 @@
-/// Takes as input a reference to a data structure implementing
-/// `CanonicalSerialize`, and converts it to a series of bytes. Example usage:
+/// Takes as input a reference to a data structure implementing `CanonicalSerialize`,
+/// and converts it to a series of bytes. Example usage:
 /// ```ignore
 /// transcript.append_message(b"public_inputs", &to_bytes!(&public_inputs)?);
 /// ```
