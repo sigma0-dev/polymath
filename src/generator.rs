@@ -166,24 +166,4 @@ where
             .map(|j| (g * f(j as u64)).into())
             .collect()
     }
-
-    //     fn polynomials<D, M>(domain: &D, m: usize, m_ij: M) -> Vec<Vec<F>>
-    //     where
-    //         D: EvaluationDomain<F> + Sync,
-    //         M: Fn(usize, usize) -> F + Sync,
-    //     {
-    //         cfg_into_iter!(0..m)
-    //             .map(|j| Self::poly_coeff_vec(domain, j, &m_ij))
-    //             .collect()
-    //     }
-    //
-    //     fn poly_coeff_vec<D, M>(domain: &D, j: usize, m: &M) -> Vec<F>
-    //     where
-    //         D: EvaluationDomain<F> + Sync,
-    //         M: Fn(usize, usize) -> F + Sync,
-    //     {
-    //         let mut poly_def = (0..domain.size()).map(|i| m(i, j)).collect(); // poly evals
-    //         domain.ifft_in_place(&mut poly_def); // make coeffs from evals
-    //         poly_def
-    //     }
 }
