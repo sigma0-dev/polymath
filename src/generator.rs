@@ -32,18 +32,14 @@ where
         cs.set_optimization_goal(OptimizationGoal::Constraints);
         cs.set_mode(SynthesisMode::Setup);
 
-        println!("Constraint synthesis ...");
         // Synthesize the circuit.
         let synthesis_time = start_timer!(|| "Constraint synthesis");
         circuit.generate_constraints(cs.clone())?;
         end_timer!(synthesis_time);
-        println!("Constraint synthesis ... Done.");
 
-        println!("Inlining LCs ...");
         let lc_time = start_timer!(|| "Inlining LCs");
         cs.finalize();
         end_timer!(lc_time);
-        println!("Inlining LCs ... Done.");
 
         ///////////////////////////////////////////////////////////////////////////
 
@@ -82,12 +78,19 @@ where
 
         let g1 = E::G1::generator();
 
+        let x_powers_g1_time = start_timer!(|| "Generating x_powers_g1");
         let x_powers_g1 = Self::generate(g1, n + bnd_a - 1, |j| x.pow([j]));
+        end_timer!(x_powers_g1_time);
 
+        let x_powers_y_alpha_g1_time = start_timer!(|| "Generating x_powers_y_alpha_g1");
         let x_powers_y_alpha_g1 = Self::generate(g1, 2 * bnd_a, |j| x.pow([j]) * y_alpha);
+        end_timer!(x_powers_y_alpha_g1_time);
 
+        let x_powers_y_gamma_g1_time = start_timer!(|| "Generating x_powers_y_gamma_g1");
         let x_powers_y_gamma_g1 = Self::generate(g1, bnd_a, |j| x.pow([j]) * &y_gamma);
+        end_timer!(x_powers_y_gamma_g1_time);
 
+        let x_powers_y_gamma_z_g1_time = start_timer!(|| "Generating x_powers_y_gamma_z_g1");
         let x_powers_y_gamma_z_g1 = {
             let d_x_by_y_gamma_max_degree =
                 2 * (n - 1) + (sigma * (MINUS_ALPHA + MINUS_GAMMA) as usize);
@@ -95,12 +98,17 @@ where
                 x.pow([j]) * &y_gamma * &z
             })
         };
+        end_timer!(x_powers_y_gamma_z_g1_time);
 
+        let x_powers_zh_by_y_alpha_g1_time =
+            start_timer!(|| "Generating x_powers_zh_by_y_alpha_g1");
         let x_powers_zh_by_y_alpha_g1 = {
             let zh_at_x = domain.evaluate_vanishing_polynomial(x);
             Self::generate(g1, n - 2, |j| x.pow([j]) * &zh_at_x * &y_to_minus_alpha)
         };
+        end_timer!(x_powers_zh_by_y_alpha_g1_time);
 
+        let uj_wj_lcs_by_y_alpha_g1_time = start_timer!(|| "Generating uj_wj_lcs_by_y_alpha_g1");
         let uj_wj_lcs_by_y_alpha_g1 = {
             let l_at_x = domain.evaluate_all_lagrange_coefficients(x);
 
@@ -126,6 +134,7 @@ where
                 (uj_x * &y_gamma + wj_x) * &y_to_minus_alpha
             })
         };
+        end_timer!(uj_wj_lcs_by_y_alpha_g1_time);
 
         let g2 = E::G2::generator();
 
