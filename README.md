@@ -76,20 +76,26 @@ See some end to end examples [here](https://github.com/sigma0-xyz/polymath/tree/
 
 Polymath is a zk-SNARK for SAP ("Square Arithmetic Programming") constraint system.
 SAP instance $\mathcal{I} = (\mathbb{F}, m_0, \mathbf{U}, \mathbf{W})$ is a system of algebraic constraints that looks like this:
+
 $$
 (\mathbf{U}\mathbb{z})^2 = \mathbf{W}\mathbb{z}
 $$
+
 where
 - matrices $\mathbf{U}, \mathbf{W} \in \mathbb{F}^{n \times m}$ encode the constraints,
-- $m_0$ is the size of the public input,
+    - m is the number of variables
+    - n be the number of constraints
+- $m_0$ is the number of the public input ( $m_0 \le m$ )
 - vector $\mathbb{z} = (\mathbb{x}||\mathbb{w}) \in \mathbb{F}^m$ is a concatenation of public input $\mathbb{x}\in\mathbb{F}^{m_0}$ and witness $\mathbb{w}\in\mathbb{F}^{m - m_0}$,
 - vector $\mathbb{x}\in\mathbb{F}^{m_0}$, by convention, has $1$ as it's first element: $\mathbb{x}_0 = 1$,
 - $(\mathbf{U}\mathbb{z})^2$ is element-wise squaring of the vector $\mathbf{U}\mathbb{z}$ elements (Hadamard product).
 
 This is slightly different from the most widespread constraint system R1CS:
+
 $$
 \mathbf{A}\mathbb{z} ∘ \mathbf{B}\mathbb{z} = \mathbf{C}·\mathbb{z}
 $$
+
 Both systems can represent the same constraints, thanks to the fact that multiplication can be reformulated via squaring with addition (and scaling):
 
 $$
