@@ -27,6 +27,8 @@ tracing = { version = "0.1", default-features = false, features = [ "attributes"
 derivative = { version = "2.0", features = ["use_core"], optional = true}
 
 rayon = { version = "1", optional = true }
+sha3 = "0.11.0-pre.4"
+hex = "0.4.3"
 
 [dev-dependencies]
 csv = { version = "1" }
