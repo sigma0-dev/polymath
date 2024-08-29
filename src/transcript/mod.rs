@@ -1,5 +1,6 @@
 //! A simplified version of `flexible-transcript`.
 
+pub mod blake3;
 pub mod keccak256;
 pub mod merlin;
 
@@ -10,6 +11,7 @@ use ark_std::{convert::AsRef, marker::PhantomData};
 /// The transcript can be either
 /// 1. a Merlin transcript(instantiated with Sha-3/keccak), it's the default transcript
 /// 2. a Keccak256 transcript, which is Solidity-friendly transcript(instantiated with Keccak256 hash).
+/// 2. a Blake3 transcript(instantiated with blake3 hash).
 pub trait Transcript: Send + Clone {
     /// The type of Fiat-Shamir challenge produced by the transcript.
     type Challenge: Send + Clone;

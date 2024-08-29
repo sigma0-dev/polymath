@@ -13,7 +13,8 @@ use ark_std::{test_rng, UniformRand};
 // For randomness (during paramgen and proof generation)
 use ark_std::rand::{RngCore, SeedableRng};
 use sigma0_polymath::{
-    keccak256::Keccak256Transcript, merlin::MerlinFieldTranscript, Polymath, Transcript,
+    blake3::Blake3Transcript, keccak256::Keccak256Transcript, merlin::MerlinFieldTranscript,
+    Polymath, Transcript,
 };
 
 struct DummyCircuit<F: Field> {
@@ -75,4 +76,5 @@ where
 fn test_dummy_polymath() {
     run_dummy_polymath::<Bls12_381, MerlinFieldTranscript<Fr>>();
     run_dummy_polymath::<Bls12_381, Keccak256Transcript<Fr>>();
+    run_dummy_polymath::<Bls12_381, Blake3Transcript<Fr>>();
 }

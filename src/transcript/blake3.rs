@@ -4,16 +4,16 @@ use std::marker::PhantomData;
 use ark_ec::pairing::Pairing;
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::vec::Vec;
-use sha3::{Digest, Keccak256};
+use blake3::Hasher;
 
-/// Transcript with `keccak256` hash function from sh3 crate.
+/// Transcript with `Blake3` hash function from sh3 crate.
 #[derive(Clone)]
-pub struct Keccak256Transcript<F: PrimeField> {
+pub struct Blake3Transcript<F: PrimeField> {
     pub(crate) transcript: Vec<u8>,
     _f: PhantomData<F>,
 }
 
-impl<F: PrimeField> Transcript for Keccak256Transcript<F> {
+impl<F: PrimeField> Transcript for Blake3Transcript<F> {
     type Challenge = F;
 
     fn new(name: &'static [u8]) -> Self {
@@ -29,10 +29,10 @@ impl<F: PrimeField> Transcript for Keccak256Transcript<F> {
     }
 
     fn challenge(&mut self, label: &'static [u8]) -> Self::Challenge {
-        let mut hasher = Keccak256::new();
+        let mut hasher = Hasher::new();
         hasher.update(&self.transcript);
         let buf = hasher.finalize();
-        let challenge = F::from_be_bytes_mod_order(&buf);
+        let challenge = F::from_be_bytes_mod_order(buf.as_bytes());
 
         self.append_message(label, &&challenge.into_bigint().to_bytes_be());
 
