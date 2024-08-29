@@ -102,7 +102,7 @@ where
         let w_poly = DensePolynomial::from_coefficients_vec(w_coeffs);
 
         let h_numerator_poly = u2_poly + -w_poly;
-        let (h_poly, rem_poly) = h_numerator_poly.divide_by_vanishing_poly(domain).unwrap();
+        let (h_poly, rem_poly) = h_numerator_poly.divide_by_vanishing_poly(domain);
 
         assert!(!h_poly.is_zero() && h_poly.degree() <= n - 2);
         assert!(rem_poly.is_zero());
