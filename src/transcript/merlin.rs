@@ -1,28 +1,6 @@
-//! A simplified version of `flexible-transcript`.
-
-mod keccak256;
-
+use crate::Transcript;
 use ark_ff::Field;
-use ark_std::{convert::AsRef, marker::PhantomData};
-
-/// Transcript to produce Fiat-Shamir challenges.
-/// The transcript can be either
-/// a Merlin transcript(instantiated with Sha-3/keccak)
-/// a Solidity-friendly transcript(instantiated with Keccak256 hash).
-/// The second is only used for recursive snarks.
-pub trait Transcript: Send + Clone {
-    /// The type of Fiat-Shamir challenge produced by the transcript.
-    type Challenge: Send + Clone;
-
-    /// Create a new transcript with the specified name.
-    fn new(name: &'static [u8]) -> Self;
-
-    /// Append a message to the transcript.
-    fn append_message<M: AsRef<[u8]>>(&mut self, label: &'static [u8], message: M);
-
-    /// Produce a challenge.
-    fn challenge(&mut self, label: &'static [u8]) -> Self::Challenge;
-}
+use std::marker::PhantomData;
 
 /// Transcript implementation producing field values as challenges using `merlin::Transcript`.
 #[derive(Clone)]

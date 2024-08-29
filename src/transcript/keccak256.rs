@@ -6,23 +6,14 @@ use ark_ff::{BigInteger, PrimeField};
 use ark_std::vec::Vec;
 use sha3::{Digest, Keccak256};
 
-/// Transcript with `keccak256` hash function.
-///
-/// It is currently implemented simply as
-/// - an append only vector of field elements
-///
-/// We keep appending new elements to the transcript vector,
-/// and when a challenge is generated they are appended too.
-///
-/// 1. challenge = hash(transcript)
-/// 2. transcript = transcript || challenge
+/// Transcript with `keccak256` hash function from sh3 crate.
 #[derive(Clone)]
-pub struct SolidityTranscript<F: PrimeField> {
+pub struct Keccak256Transcript<F: PrimeField> {
     pub(crate) transcript: Vec<u8>,
     _f: PhantomData<F>,
 }
 
-impl<F: PrimeField> Transcript for SolidityTranscript<F> {
+impl<F: PrimeField> Transcript for Keccak256Transcript<F> {
     type Challenge = F;
 
     fn new(name: &'static [u8]) -> Self {

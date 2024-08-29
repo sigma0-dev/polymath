@@ -26,7 +26,7 @@ use ark_std::test_rng;
 // For randomness (during paramgen and proof generation)
 use ark_std::rand::{Rng, RngCore, SeedableRng};
 
-use sigma0_polymath::transcript::MerlinFieldTranscript;
+use sigma0_polymath::transcript::merlin::MerlinFieldTranscript;
 
 const MIMC_ROUNDS: usize = 322;
 
