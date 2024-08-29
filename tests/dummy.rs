@@ -1,5 +1,3 @@
-use ark_std::time::{Duration, Instant};
-
 // Bring in some tools for using pairing-friendly curves
 // We're going to use the BLS12-381 pairing-friendly elliptic curve.
 use ark_bls12_381::{Bls12_381, Fr};
@@ -8,12 +6,12 @@ use ark_ec::pairing::Pairing;
 use ark_ff::Field;
 // We'll use these interfaces to construct our circuit.
 use ark_relations::{
-    lc, ns,
-    r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError, Variable},
+    lc,
+    r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
 use ark_std::{test_rng, UniformRand};
 // For randomness (during paramgen and proof generation)
-use ark_std::rand::{Rng, RngCore, SeedableRng};
+use ark_std::rand::{RngCore, SeedableRng};
 use sigma0_polymath::{
     keccak256::Keccak256Transcript, merlin::MerlinFieldTranscript, Polymath, Transcript,
 };
