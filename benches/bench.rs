@@ -9,7 +9,7 @@ use ark_relations::{
     lc,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
-use sigma0_polymath::{MerlinFieldTranscript, Polymath};
+use sigma0_polymath::{transcript::merlin::MerlinFieldTranscript, Polymath};
 
 const NUM_PROVE_REPETITIONS: usize = 1;
 const NUM_VERIFY_REPETITIONS: usize = 50;

@@ -38,8 +38,6 @@ pub mod verifier;
 
 mod common;
 mod r#macro;
-#[cfg(test)]
-mod test;
 pub mod transcript;
 
 /// The [Polymath](https://eprint.iacr.org/2024/916.pdf) zkSNARK.
