@@ -24,17 +24,18 @@ impl<F: PrimeField> Transcript for Blake3Transcript<F> {
     }
 
     fn append_message<M: AsRef<[u8]>>(&mut self, label: &'static [u8], message: M) {
-        // We remove the labels for better efficiency
         self.transcript.extend_from_slice(label);
+        self.transcript.extend_from_slice(message.as_ref());
     }
 
     fn challenge(&mut self, label: &'static [u8]) -> Self::Challenge {
         let mut hasher = Hasher::new();
         hasher.update(&self.transcript);
+        hasher.update(label);
         let buf = hasher.finalize();
         let challenge = F::from_be_bytes_mod_order(buf.as_bytes());
 
-        self.append_message(label, &&challenge.into_bigint().to_bytes_be());
+        self.transcript = buf.as_bytes().to_vec();
 
         challenge
     }
