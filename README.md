@@ -83,7 +83,9 @@ $$
 
 where
 - matrices $\mathbf{U}, \mathbf{W} \in \mathbb{F}^{n \times m}$ encode the constraints,
-- $m_0$ is the size of the public input,
+    - m is the number of variables
+    - n be the number of constraints
+- $m_0$ is the number of the public input ( $m_0 \le m$ )
 - vector $\mathbb{z} = (\mathbb{x}||\mathbb{w}) \in \mathbb{F}^m$ is a concatenation of public input $\mathbb{x}\in\mathbb{F}^{m_0}$ and witness $\mathbb{w}\in\mathbb{F}^{m - m_0}$,
 - vector $\mathbb{x}\in\mathbb{F}^{m_0}$, by convention, has $1$ as it's first element: $\mathbb{x}_0 = 1$,
 - $(\mathbf{U}\mathbb{z})^2$ is element-wise squaring of the vector $\mathbf{U}\mathbb{z}$ elements (Hadamard product).
